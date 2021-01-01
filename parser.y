@@ -20,8 +20,8 @@ static char *savedName;
 static int savedLinenno;
 static TreeNode *syntaxTree;
 extern bool bug;
-bool cdbug, PAST, STATIC_FLAG;
-int numErrs, numWarns;  
+bool cdbug, PAST, STATIC_FLAG, PMEM;
+int numErrs, numWarns, Loffset, Goffset, SYNTAXERR;
 SymbolTable st;
 
 
@@ -188,6 +188,7 @@ varDeclId : ID
                   $$->TD = $1;
                   $$->attr.value = $3->Num_Val;    //posibly not needed
                   $$->isArray = true;
+                  $$->arraySize = $3->Num_Val;
                   $$->attr.op = $2->Token_Class;
                   $$->type = UndefinedType;
             }
@@ -1225,7 +1226,7 @@ constant : NUMCONST
 
 int main(int argc, char **argv){
    int c = 0;
-   numErrs = 0, numWarns = 0;   
+   numErrs = 0, numWarns = 0, Loffset = 0, Goffset = 0, SYNTAXERR = false;
    bool printSyntaxTree = 0;
    
    TreeNode *tmp;
@@ -1255,14 +1256,15 @@ int main(int argc, char **argv){
                yydebug=1;
               if(cdbug) printf("DEBUGGING\n");
                break;
-            case 'p': 
+            case 'p': //lowercase p
                if(cdbug)printf("PRINTING SYNTAX TREE\n");
                printSyntaxTree=true;
                break;
-            case 'P':
+            case 'P':   //Capitol P
             if(cdbug) printf("PRINTING THE ANNOTATED SYNTAX TREE\n");
             printSyntaxTree = true;
-            PAST = true;
+            //PAST = true;
+            PMEM = true;
             break;
             case '?':
             default: 
@@ -1286,6 +1288,7 @@ int main(int argc, char **argv){
    yyparse();     //tokenize the entire file
 
    // If there are syntax errors, we can now look for semantic ones
+   
    if(numErrs == 0){          
       prototype();         //IO prototypes
       analyze(syntaxTree);   //syntax anlysis  
@@ -1299,12 +1302,16 @@ int main(int argc, char **argv){
       else{
             //main found
       }
-   } 
+   }
+   else{
+      SYNTAXERR = true;
+   }
 
    //printf("Print FINAL table.\n");              
    //st.print(pointerPrintStr);
    if(printSyntaxTree) TreePrint(syntaxTree, 0);   //print the tree
-
+   //Goffset = Goffset +1;                           //bc i use post decrement (x--)
+   printf("Offset for end of global space: %d\n", Goffset);
    printf("Number of warnings: %d\n",numWarns );
    printf("Number of errors: %d\n",numErrs);
 

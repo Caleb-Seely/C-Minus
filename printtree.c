@@ -6,7 +6,7 @@
 #include "printtree.h"
 #include "parser.tab.h" 
 
-extern bool cdbug;
+extern bool cdbug, SYNTAXERR;
 int blanks = 0;
 
 TreeNode *newStmtNode(StmtKind kind, int lineNo){
@@ -118,6 +118,16 @@ void TreePrint(TreeNode *tree, int sib){
 
    while (tree != NULL)
    {
+      if(tree->memSize == 0) {
+         tree->memSize = 1;    //for undeclared / errors
+         tree->offset = 0;
+         //tree->memType = Local;
+      }
+      if(SYNTAXERR){
+         tree->memSize = 1;    //for undeclared / errors
+         tree->offset = 0;
+         
+      }
       if(cdbug) printf("Tree->nodekind: %d\n", tree->nodekind);
 
       if(tree->nodekind == StmtK){
@@ -125,42 +135,62 @@ void TreePrint(TreeNode *tree, int sib){
          switch (tree->kind.stmt)
          {
          case IfK :
-            printf("If [line: %d]\n", tree->lineno);
+            printf("If ");
+            if(PAST) {printf("[line: %d]", tree->lineno);}
+            printf("\n");
             break;
          case NullK :
-            printf("NULL [line: %d]\n", tree->lineno);
+            printf("NULL ");
+            if(PAST) {printf("[line: %d]", tree->lineno);}
+            printf("\n");
             break;
 
          case ElsifK :
-            printf("Elsif [line: %d]\n", tree->lineno);
+            printf("Elsif ");
+            if(PAST) {printf("[line: %d]", tree->lineno);}
+            printf("\n");
             break;
 
          case WhileK :
-            printf("While [line: %d]\n", tree->lineno);
+            printf("While ");
+            if(PAST) {printf("[line: %d]", tree->lineno);}
+            printf("\n");
             break;
 
          case LoopK :
-            printf("Loop [line: %d]\n", tree->lineno);
+            printf("Loop ");
+            if(PAST) {printf("[line: %d]", tree->lineno);}
+            printf("\n");
             break;
 
          case LoopForeverK :
-            printf("LoopForever [line: %d]\n", tree->lineno);
+            printf("LoopForever ");
+            if(PAST) {printf("[line: %d]", tree->lineno);}
+            printf("\n");
             break;
 
          case CompoundK :
-            printf("Compound [line: %d]\n", tree->lineno);
+            printf("Compound ");
+            if(PAST) {printf("[line: %d]", tree->lineno);}
+            printf("\n");
             break;
 
          case RangeK :
-            printf("Range [line: %d]\n", tree->lineno);
+            printf("Range ");
+            if(PAST) {printf("[line: %d]", tree->lineno);}
+            printf("\n");
             break;
 
          case ReturnK :
-            printf("Return [line: %d]\n", tree->lineno);
+            printf("Return ");
+            if(PAST) {printf("[line: %d]", tree->lineno);}
+            printf("\n");
             break;
 
          case BreakK :
-            printf("Break [line: %d]\n", tree->lineno);
+            printf("Break ");
+            if(PAST) {printf("[line: %d]", tree->lineno);}
+            printf("\n");
             break;
 
          default:
@@ -176,44 +206,47 @@ void TreePrint(TreeNode *tree, int sib){
          case OpK:
             printf("Op: ");
             TokenPrint(tree->attr.op, "\0");
-            if(PAST) {printf(" ["); exprTypePrint(tree->type); printf("] ");}
-            printf(" [line: %d]\n", tree->lineno);
+            if(PAST) {printf(" ["); exprTypePrint(tree->type); printf("] [line: %d]", tree->lineno);}
+            printf("\n");
             break;
          
          case ConstantK:        
             if(tree->type == Bool ){
                printf("Const: ");
                TokenPrint(tree->attr.op, "\0");
-               if(PAST) {printf(" [type bool] ");}
-               printf(" [line: %d]\n", tree->lineno);
+               if(PAST) {printf(" [type bool] [line: %d]", tree->lineno);}
+               printf("\n");
             }  
             else if(tree->type == Char){
                printf("Const: ");
                if(strcmp(tree->TD->Token_Str, "'\0'") == 0){ printf("'%c'", '\0'); }
                else printf("%s", tree->TD->Token_Str);
-               if(PAST) {printf(" [type char] ");}
-               printf(" [line: %d]\n", tree->lineno);
+               if(PAST) {printf(" [type char] [line: %d]", tree->lineno);}
+               printf("\n");
             }
             else 
             {
                printf("Const: %d ",tree->attr.value);
-               if(PAST) {printf(" [type int] ");}
-               printf("[line: %d]\n",  tree->lineno);
+               if(PAST) {printf(" [type int] [line: %d]", tree->lineno);}
+               printf("\n");
                //TokenPrint(tree->attr.op, "\0");
             } 
             break;
 
          case IdK:
             printf("Id: %s ",tree->attr.name);
-            if(PAST) {printf("["); exprTypePrint(tree->type); printf("] ");}
-            printf("[line: %d]\n", tree->lineno);
+            if(PMEM) {printf(" [mem: "); memTypePrint(tree->memType); printf(" size: %d loc: %d] ", tree->memSize, tree->offset); }
+            if(PAST) {printf("["); exprTypePrint(tree->type); printf("] [line: %d]", tree->lineno);}
+            printf("\n");
+            
             break;
 
          case AssignK:
             printf("Assign: ");
             TokenPrint(tree->attr.op, "\0");
-            if(PAST) {printf(" ["); exprTypePrint(tree->type); printf("]");}
-            printf(" [line: %d]\n", tree->lineno);
+            if(PAST) {printf(" ["); exprTypePrint(tree->type); printf("] [line: %d]", tree->lineno);}
+            printf("\n");
+            
             break;
 
          case InitK:
@@ -222,8 +255,8 @@ void TreePrint(TreeNode *tree, int sib){
 
          case CallK:
             printf("Call: %s ",tree->attr.name);
-            if(PAST) {printf("["); exprTypePrint(tree->type); printf("] ");}
-            printf("[line: %d]\n", tree->lineno);
+            if(PAST) {printf("["); exprTypePrint(tree->type); printf("] [line: %d]", tree->lineno); }
+            printf("\n");
             break;
 
          default:
@@ -237,20 +270,27 @@ void TreePrint(TreeNode *tree, int sib){
             case FuncK:
                printf("Func %s returns ", tree->attr.name );
                exprTypePrint(tree->type);
-               printf(" [line: %d]\n", tree->lineno);
+               if(PMEM) {printf(" [mem: "); memTypePrint(tree->memType); printf(" loc: %d] ", tree->offset);}
+               if(PAST) {printf(" [line: %d]", tree->lineno);}
+               
+               printf("\n");
                break;
 
             case VarK:
                if (tree->isArray == true){
                   printf("Var %s is array of ", tree->TD->Token_Str ); //   
-                  exprTypePrint(tree->type);            
-                  printf(" [line: %d]\n",  tree->lineno);
+                  exprTypePrint(tree->type);      
+                  if(PMEM) {printf(" [mem: "); memTypePrint(tree->memType); printf(" size: %d loc: %d] ", tree->memSize, tree->offset);}      
+                  if(PAST) {printf(" [line: %d]",  tree->lineno);}
+                  printf("\n");
                }
                else
                {
                   printf("Var %s of " ,tree->attr.name ); //tree->attr.name    
                   exprTypePrint(tree->type);            
-                  printf(" [line: %d]\n",  tree->lineno);
+                  if(PMEM) {printf(" [mem: "); memTypePrint(tree->memType); printf(" size: %d loc: %d] ", tree->memSize, tree->offset);}  
+                  if(PAST) {printf(" [line: %d]",  tree->lineno);}
+                  printf("\n");
                }
                break;
 
@@ -258,12 +298,16 @@ void TreePrint(TreeNode *tree, int sib){
                if(tree->isArray){
                   printf("Param %s is array of ", tree->attr.name);
                   exprTypePrint(tree->type);
-                  printf(" [line: %d]\n", tree->lineno);
+                  if(PMEM) {printf(" [mem: "); memTypePrint(tree->memType); printf(" size: %d loc: %d] ", tree->memSize, tree->offset);}  
+                  if(PAST) {printf(" [line: %d]", tree->lineno);}
+                  printf("\n");
                }
                else{
                   printf("Param %s of ", tree->attr.name);
                   exprTypePrint(tree->type);
-                  printf(" [line: %d]\n", tree->lineno);
+                  if(PMEM) {printf(" [mem: "); memTypePrint(tree->memType); printf(" size: %d loc: %d] ", tree->memSize, tree->offset);}  
+                  if(PAST) {printf(" [line: %d]", tree->lineno);}
+                  printf("\n");
                }
                break;
 
@@ -448,33 +492,53 @@ void TokenPrint(OpKind token, const char *tokenString){
 void exprTypePrint(ExpType t){
    switch (t)
    {
-   case Void:
-      printf("type void");
-      break;
-   case Integer:
-      printf("type int");
-      break;
-   case Bool:
-      printf("type bool");
-      break;
-   case Char:
-      printf("type char");
-      break;
-   case CharInt:
-      printf("type char");
-      break;
-   case Equal:
-      printf("Equal");
-      break;
-   case UndefinedType:
-      printf("undefined type");
-      break;
-   default:
-      printf("exprType not found: %d\n", t);
-      break;
+      case Void:
+         printf("type void");
+         break;
+      case Integer:
+         printf("type int");
+         break;
+      case Bool:
+         printf("type bool");
+         break;
+      case Char:
+         printf("type char");
+         break;
+      case CharInt:
+         printf("type char");
+         break;
+      case Equal:
+         printf("Equal");
+         break;
+      case UndefinedType:
+         printf("undefined type");
+         break;
+      default:
+         printf("exprType not found: %d\n", t);
+         break;
    }
 }
 
+void memTypePrint(VarKind v){
+   switch (v)
+   {
+      case Global:
+         printf("Global");
+         break;
+      case LocalStatic:
+         printf("LocalStatic");
+         break;
+      case Local:
+         printf("Local");
+         break;
+      case Parameter:
+         printf("Parameter");
+         break;
+   default:
+      printf("None");
+      break;
+   }
+}
 void typeToSibs(TreeNode *t, ExpType typ){
    
    TreeNode *tmp = t;

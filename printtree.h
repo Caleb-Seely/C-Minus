@@ -6,7 +6,7 @@
 
 extern int yylineno;
 typedef int OpKind;
-extern bool PAST;
+extern bool PAST, PMEM;
 
 typedef enum {DeclK, StmtK, ExprK} NodeKind;
 typedef enum {FuncK, VarK, ParamK} DeclKind;
@@ -61,7 +61,10 @@ typedef struct treeNode
     int numParams;                        //number of paramters a function has
     bool isIOControl;
 
-    // even more semantic stuff will go here in later assignments.
+    int memSize;
+    VarKind memType;
+    int offset;
+
 } TreeNode;
 
 TreeNode *newStmtNode(StmtKind kind, int lineNo);
@@ -73,6 +76,7 @@ void typeToSibs(TreeNode *t, ExpType typ);
 void TreePrint(TreeNode *t, int sib);
 void TokenPrint(OpKind token, const char *tokenString);
 void exprTypePrint(ExpType t);
+void memTypePrint(VarKind v);
 void spcaes(int n);
 
 

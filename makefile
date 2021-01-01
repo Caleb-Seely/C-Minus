@@ -31,10 +31,8 @@ tests:
 
 alls:
 	./c- small.c-
-	./c- syntaxerr-assign.c-
-	./c- syntaxerr-badchar.c-
-	./c- syntaxerr-call.c-
-	./c- syntaxerr-small.c-
-	./c- syntaxerr-constants.c-
-	./c- syntaxerr-hamlet.c-
+	./c- badcontrol.c-
+	./c- basicAll5.c-
+	./c- init.c-
+	./c- callstatic.c-
 	

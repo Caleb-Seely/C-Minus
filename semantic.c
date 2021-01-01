@@ -5,7 +5,7 @@
 #include "symbolTable.h"
 #include "parser.tab.h" 
 #include "printtree.h"
-extern int numErrs, numWarns;  
+extern int numErrs, numWarns, Loffset, Goffset;  
 extern SymbolTable st;
 bool err;
 bool initialize = false;
@@ -16,6 +16,8 @@ int loopDepth = 0;
 bool Return_FLAG = false;
 int bug = 0;
 char* currentScope;
+bool REDECLARED;
+
 
 void analyze(TreeNode *tree){
    
@@ -164,6 +166,7 @@ void analyze(TreeNode *tree){
             //st.leave();
             loopDepth--;
             inLoop = false;
+            Loffset++;     //free the tmp loop var
 
             break;
 
@@ -182,7 +185,10 @@ void analyze(TreeNode *tree){
 
          case CompoundK :
            if(bug) printf("Compound [line: %d]\n", tree->lineno);
-            if(!NEW_SCOPE) st.enter((char*)"compund");
+            if(!NEW_SCOPE) {
+               Loffset = -2;
+               st.enter((char*)"compund");
+            }
             NEW_SCOPE = false;      
             analyze(tree->child[0]);
             analyze(tree->child[1]);
@@ -190,6 +196,10 @@ void analyze(TreeNode *tree){
             if(bug)st.print(pointerPrintStr);
             st.applyToAll(wasUsed);
             st.leave();
+
+            if(inLoop){
+               Loffset++; 
+            }
             break;
 
          case RangeK :
@@ -221,6 +231,7 @@ void analyze(TreeNode *tree){
                printf(".\n");
                numErrs++;
             }
+            
             
             break;
 
@@ -372,7 +383,17 @@ void analyze(TreeNode *tree){
              
            
 
-           if(tmp != NULL){ tmp->isUsed = true;}
+            if(tmp != NULL){ //id is declared
+               tmp->isUsed = true;
+
+               
+               tree->memType = tmp->memType;    //set the current id node (for printing)
+               tree->memSize = tmp->memSize;
+               tree->offset = tmp->offset;
+               if(tmp->isArray){
+                  tmp->memSize = tmp->arraySize+1;
+               }
+            }
 
             break;
 
@@ -487,8 +508,8 @@ void analyze(TreeNode *tree){
                   currentScope = strdup(tree->attr.name); 
                   Return_FLAG = false;
                //printf("ENTERED\n");
-
-               
+               tree->offset = 0;  
+               Loffset = -2;                 //Set the offset before looking at children
                analyze(tree->child[0]);    //compound stmt will handle any param
                analyze(tree->child[1]); 
                if(!Return_FLAG && tree->type != Void){
@@ -502,7 +523,12 @@ void analyze(TreeNode *tree){
                   st.applyToAll(wasUsed);
                   st.leave();
                }
-
+               
+               tree->memType = Global;
+               tree->memSize = 1;
+               
+                   //space for other info
+               
                //st.print(pointerPrintStr);            
                //printf("LEVING\n");
                break;
@@ -525,20 +551,65 @@ void analyze(TreeNode *tree){
                      numErrs++;
                   }
                   tree->isInit = true;
-               }                
+               }       
+
                if (tree->isArray == true){
-               if(bug)   printf("Var %s is array line %d \n", tree->TD->Token_Str, tree->lineno );   
+                  if(bug)   printf("Var %s is array line %d \n", tree->TD->Token_Str, tree->lineno );   
                   st.insert(tree->TD->Token_Str, (TreeNode*) tree); 
+                  //printf("Size %d\n", tree->arraySize);
+                  tree->memSize = tree->arraySize+1;     //mem mgmt
+                  tree->offset = Loffset-1;     //the offset is where the array starts and justbefore it is the size
+                  Loffset = Loffset - tree->arraySize-1; //memory is +1 from the size
                }
                else
                {
                 if(bug)  printf("Var %s line %d \n", tree->attr.name, tree->lineno ); //   
                   st.insert(tree->attr.name, (TreeNode*) tree); 
+                  tree->memSize = 1;
+                  tree->offset = Loffset--;
                }
    
                //printf("DEPTH %d ver %s\n", st.depth(), tree->attr.name);
               
-               if(st.depth() == 1) tree->isInit = true;     //B/c globablas are always init?
+               if(st.depth() == 1){        // Global
+                  tree->isInit = true;     // B/c globablas are always init?
+                  tree->memType = Global;
+                  tree->offset = Goffset--;
+                  if(tree->isArray && !REDECLARED){
+                     Loffset = Loffset + tree->arraySize; //if its global, the local scope may not matter b/c i set it to 0 every time
+                     tree->offset = Goffset--;
+                     Goffset = Goffset - tree->arraySize+1; //mem of array is +1 of its size;
+                  }
+               }
+               else
+               {
+                  if(tree->isStatic){
+                     tree->memType = LocalStatic;
+                     tree->offset = Goffset--;
+                     Loffset++;  // static is technically global
+
+                     if(tree->isArray){
+                        tree->offset = Goffset--;
+                        Goffset = Goffset - tree->arraySize+1;
+                        Loffset = Loffset + tree->arraySize; //if its global, the local scope may not matter b/c i set it to 0 every time
+                     }
+                  }
+                  else
+                  {
+                     tree->memType = Local;
+                  }  
+               }
+               
+               if(REDECLARED  && tree->memType == Local){
+                  Loffset++;
+                  tree->offset = 0;
+                  REDECLARED = false;
+               }
+               if(REDECLARED && (tree->memType == Global || tree->memType == LocalStatic)) {
+                  Goffset++;
+                  tree->offset = 0;
+                  REDECLARED = false;
+               }
                break;
 
             case ParamK:
@@ -554,15 +625,27 @@ void analyze(TreeNode *tree){
                   }
                   else
                   {
-                     st.insert(tree->attr.name, (TreeNode*) tree); 
+                     st.insert(tree->attr.name, (TreeNode*) tree);
+                     
                   }
-                  
+                  tree->memType = Parameter; 
                }
                else{
                   if(bug)  printf("Param %s line %d \n", tree->attr.name, tree->lineno);
 
                   st.insert(tree->attr.name, (TreeNode*) tree);
+                  tree->memType = Parameter;
                }
+
+               tree->memSize = 1;
+               tree->offset = Loffset--;
+
+               if(REDECLARED){
+                  Loffset++;
+                  tree->offset = 0;
+                  REDECLARED = false;
+               }
+
                break;
 
             default:
@@ -995,7 +1078,8 @@ void allreadyDeclared(TreeNode *tree, char* sym, int line){
    printf("ERROR(%d): Symbol '%s' is already declared at line %d.\n",tree->lineno, sym, line);
    numErrs++;
    err = true; 
-   tree->isErr = true;             
+   tree->isErr = true;
+   REDECLARED = true;             
 }
 
 void unaryError(TreeNode *tree, char* expected){
