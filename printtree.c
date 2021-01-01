@@ -13,7 +13,7 @@ TreeNode *newStmtNode(StmtKind kind, int lineNo){
    if(cdbug)printf("NEW STM Node\n");
    TreeNode *t = (TreeNode *) malloc(sizeof(TreeNode));
    int i = 0;
-
+   t->memSize = 0;
    if(t == NULL){
       printf("Error with newStmtNode Malloc (line %d)\n", yylineno);
    }
@@ -35,6 +35,7 @@ TreeNode *newExpNode(ExpKind kind, int lineNo){
    if(cdbug) printf("NEW EXP Node\n");
    TreeNode *t = (TreeNode *) malloc(sizeof(TreeNode));
    int i = 0;
+   t->memSize =0;
    
    if(t == NULL){
       printf("Error with newExpNode Malloc (line %d)\n", yylineno);
@@ -58,7 +59,7 @@ TreeNode *newExpNode(ExpKind kind, int lineNo){
 TreeNode *newDecNode(DeclKind kind, int lineNo){
    if(cdbug) printf("NEW Dec Node\n");
    TreeNode *t = (TreeNode *) malloc(sizeof(TreeNode));
-
+   t->memSize =0;
   // t->attr.name = (char *) malloc();
    int i = 0;
 
@@ -117,7 +118,8 @@ void TreePrint(TreeNode *tree, int sib){
    if(tree == NULL) printf("TREE PRINTING IS NULL\n");
 
    while (tree != NULL)
-   {
+   {  
+      
       if(tree->memSize == 0) {
          tree->memSize = 1;    //for undeclared / errors
          tree->offset = 0;

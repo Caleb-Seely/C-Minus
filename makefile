@@ -2,13 +2,13 @@ Bin  = c-
 CC = g++
 CFLAGS = -g 
 
-SRCS = parser.y parser.l printtree.c symbolTable.cpp semantic.c IO.c errors.c yyerror.cpp
+SRCS = parser.y parser.l printtree.c symbolTable.cpp semantic.c IO.c errors.c yyerror.cpp emitcode.cpp codeGen.c
 DEPS = lex.yy.c parser.tab.c parser.tab.h makefile
-HDRS = printtree.h ScanType.h symbolTable.h semantic.h IO.h yyerror.h
+HDRS = printtree.h ScanType.h symbolTable.h semantic.h IO.h yyerror.h emitcode.h codeGen.h
 OBJS = parser.tab.o lex.yy.o
 
 c-: $(SRCS) $(DEPS) $(HDRS)
-	g++ parser.tab.c lex.yy.c printtree.c symbolTable.cpp semantic.c IO.c errors.c yyerror.cpp -g -o c- 
+	g++ parser.tab.c lex.yy.c printtree.c symbolTable.cpp semantic.c IO.c errors.c yyerror.cpp emitcode.cpp codeGen.c -g -o c- 
 
 parser.tab.c parser.tab.h: parser.y
 	bison -v -t -d parser.y --debug --verbose 
@@ -22,17 +22,16 @@ tar:
 
 clean:
 	rm -f $(OBJS) $(BIN) lex.yy.c parser.tab.h parser.tab.c AAA_tarfile 
+	rm tm
 
-tests: 
-
-	./c- small.c-
-	echo -e '5 | 4\n'
+tiny: 
+	g++ tm.c -o tm
 
 
 alls:
-	./c- small.c-
-	./c- badcontrol.c-
-	./c- basicAll5.c-
-	./c- init.c-
-	./c- callstatic.c-
+	./c- a00.c-
+	./c- a01.c-
+	./c- a02.c-
+	./c- a03.c-
+	
 	

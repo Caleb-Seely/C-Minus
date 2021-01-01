@@ -26,13 +26,13 @@
          if( String_Value[1] == 92){
             
             if(String_Value[2] ==110 ){
-               printf("MADE it %s\n", String_Value);
-               String_Value[1] = 10 ;
+               //printf("MADE it %s\n", String_Value);   //Not sure this works
+               String_Value[1] = 10 ;  //New line
                
             }
             else if(String_Value[2] ==48 ){
-               printf("MADE it %s\n", String_Value);
-               String_Value[1] = 0 ;
+               //printf("MADE it %s\n", String_Value);
+               String_Value[1] = 0 ;   //Null
                
             }
             else{
@@ -158,7 +158,7 @@
 %option yylineno
 DIGIT [0-9]
 
-LETTER [A-Za-z\_]
+LETTER [A-Za-z_]
 SINGLE_CHAR [\;\,\:\=\+\-\<\>\*\?/\%\[\]\{\}\(\)]
 
 %%
@@ -221,11 +221,11 @@ false                      return Set_Value(LINE_NUMBER, FALSE, yytext);
 ">="           return Set_Value(LINE_NUMBER, GRETEQ, yytext);//printf("GRETEQ %s|\n", yytext); 
 
               
-\n	            ++LINE_NUMBER;  
-''            printf("ERROR(%d): Empty character %s \n", LINE_NUMBER, &yytext[0]); numErrs++;
+\n	                  ++LINE_NUMBER;  
+''                   printf("ERROR(%d): Empty character %s \n", LINE_NUMBER, &yytext[0]); numErrs++;
 
-'(\\.|[^\n'\\])'          return Char_Error(LINE_NUMBER, CHARCONST, yytext);
-\.\.              return Set_Value(LINE_NUMBER, RANGE, yytext);
+'(\\.|[^\n'\\])'     return Char_Error(LINE_NUMBER, CHARCONST, yytext);
+\.\.                 return Set_Value(LINE_NUMBER, RANGE, yytext);
 
 
 
