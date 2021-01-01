@@ -11,20 +11,20 @@ bool err;
 bool initialize = false;
 bool NEW_SCOPE = false;
 bool inCall = false;
+bool inLoop = false;
+int loopDepth = 0;
+bool Return_FLAG = false;
 int bug = 0;
+char* currentScope;
+
 void analyze(TreeNode *tree){
    
    TreeNode *tmp, *tmp2;
    bool fWhile = false; 
    
-
-   //if(bug) printf("TreePrint Called\n");
-
-   //if(bug) printf("TREE PRINTING IS NULL\n");
-
    while (tree != NULL)
    {
-      //if(bug) printf("Tree->nodekind: %d\n", tree->nodekind);
+      if(bug) printf("Tree->nodekind: %d\n", tree->nodekind);
 
       if(tree->nodekind == StmtK){
         if(bug) printf("---Stmt---\n");
@@ -34,9 +34,22 @@ void analyze(TreeNode *tree){
          case IfK :
           if(bug)  printf("If [line: %d]\n", tree->lineno);
             analyze(tree->child[0]);
+            //exprTypePrint(tree->child[0]->type);
+
+             if(tree->child[0]->type != Bool && !tree->child[0]->isErr){
+               printf("ERROR(%d): Expecting Boolean test condition in if statement but got ", tree->lineno);
+               exprTypePrint(tree->child[0]->type);
+               printf(".\n");
+               numErrs++;
+            }
+            if(tree->child[0]->isArray){
+               printf("ERROR(%d): Cannot use array as test condition in if statement.\n", tree->lineno);
+               numErrs++;
+            }
             analyze(tree->child[1]);
             analyze(tree->child[2]);
-            
+
+
             break;
          case NullK :
            if(bug) printf("NULL [line: %d]\n", tree->lineno);
@@ -45,13 +58,28 @@ void analyze(TreeNode *tree){
          case ElsifK :
            if(bug) printf("Elsif [line: %d]\n", tree->lineno);
             analyze(tree->child[0]);
+
+
+             if(tree->child[0]->type != Bool && !tree->child[0]->isErr){
+               printf("ERROR(%d): Expecting Boolean test condition in elsif statement but got ", tree->lineno);
+               exprTypePrint(tree->child[0]->type);
+               printf(".\n");
+               numErrs++;
+            }
+            if(tree->child[0]->isArray){
+               printf("ERROR(%d): Cannot use array as test condition in elsif statement.\n", tree->lineno);
+               numErrs++;
+            }
             analyze(tree->child[1]);
             analyze(tree->child[2]);
+
             break;
 
          case WhileK :
-           if(bug) printf("While [line: %d]\n", tree->lineno);
-           
+            if(bug) printf("While [line: %d]\n", tree->lineno);
+            
+            loopDepth++;
+
             if(tree->child[1] != NULL && tree->child[1]->nodekind == StmtK && tree->child[1]->kind.stmt == CompoundK){
                if(bug) printf("Complex While %d\n", tree->child[1]->lineno);
                st.enter((char*)"WHILE");
@@ -59,16 +87,27 @@ void analyze(TreeNode *tree){
             }
             else
             {
-              if(bug) printf("Simple while %d\n", tree->lineno); 
+               if(bug) printf("Simple while %d\n", tree->lineno); 
                st.enter((char*)"simple_While");
             }
-            
+
             analyze(tree->child[0]);
+
+             if(tree->child[0]->type != Bool && !tree->child[0]->isErr){
+               printf("ERROR(%d): Expecting Boolean test condition in while statement but got ", tree->lineno);
+               exprTypePrint(tree->child[0]->type);
+               printf(".\n");
+               numErrs++;
+            }
+            if(tree->child[0]->isArray){
+               printf("ERROR(%d): Cannot use array as test condition in while statement.\n", tree->lineno);
+               numErrs++;
+            }
             analyze(tree->child[1]);
+
 
             if(tree->child[1] != NULL && tree->child[1]->nodekind == StmtK && tree->child[1]->kind.stmt == CompoundK){
                // this is a while with {} so compound handles it
-               //printf("Complex while %d\n", tree->child[1]->lineno);
                if(bug) printf("LEAVING Complex While %d\n", tree->child[1]->lineno);
             }
             else
@@ -78,10 +117,15 @@ void analyze(TreeNode *tree){
                st.leave();
             }
 
+            //printf("Setting to false %d\n", tree->lineno);
+            loopDepth--;
+            
             break;
 
          case LoopK :
            if(bug) printf("Loop [line: %d]\n", tree->lineno);
+            inLoop = true;
+            loopDepth++;
 
             if(tree->child[2] != NULL && tree->child[2]->nodekind == StmtK && tree->child[2]->kind.stmt == CompoundK){
                // this is a loops with {} so compound handles it
@@ -99,7 +143,9 @@ void analyze(TreeNode *tree){
 
 
             analyze(tree->child[0]);   
+            
             analyze(tree->child[1]);
+
             analyze(tree->child[2]);
             
             if(bug)st.print(pointerPrintStr);
@@ -116,12 +162,22 @@ void analyze(TreeNode *tree){
             }
             //st.applyToAll(wasUsed);
             //st.leave();
+            loopDepth--;
+            inLoop = false;
 
             break;
 
          case LoopForeverK :
            if(bug) printf("LoopForever [line: %d]\n", tree->lineno);
+
+           loopDepth++;
+           inLoop = true;
+
            analyze(tree->child[1]);
+           
+           inLoop = false;
+           loopDepth--;
+
             break;
 
          case CompoundK :
@@ -141,29 +197,98 @@ void analyze(TreeNode *tree){
             analyze(tree->child[0]);
             analyze(tree->child[1]);
             analyze(tree->child[2]);
+
+            if(inLoop && (tree->child[0]->isArray || tree->child[1]->isArray || tree->child[2]->isArray)){
+               printf("ERROR(%d): Cannot use array in range for loop statement.\n", tree->lineno);
+               numErrs++;
+            }
+
+            if(inLoop && !tree->child[0]->isErr && (tree->child[0]->type != Integer && tree->child[0]->type != UndefinedType)){
+               printf("ERROR(%d): Expecting integer in range for loop statement but got ", tree->lineno);
+               exprTypePrint(tree->child[0]->type);
+               printf(".\n");
+               numErrs++;
+            }
+            if(inLoop && !tree->child[1]->isErr && (tree->child[1]->type != Integer && tree->child[1]->type != UndefinedType)){
+               printf("ERROR(%d): Expecting integer in range for loop statement but got ", tree->lineno);
+               exprTypePrint(tree->child[1]->type);
+               printf(".\n");
+               numErrs++;
+            }
+            if(inLoop && tree->child[2] != NULL && !tree->child[2]->isErr && (tree->child[2]->type != Integer && tree->child[2]->type != UndefinedType)){
+               printf("ERROR(%d): Expecting integer in range for loop statement but got ", tree->lineno);
+               exprTypePrint(tree->child[2]->type);
+               printf(".\n");
+               numErrs++;
+            }
             
             break;
 
          case ReturnK :
            if(bug) printf("Return [line: %d]\n", tree->lineno);
-           if(tree->child[0] != NULL && tree->child[0]->nodekind == ExprK && tree->child[0]->kind.expr == IdK){
-              analyze(tree->child[0]);
+
+            Return_FLAG = true;
+            
+            analyze(tree->child[0]);    //analyze the child if there is one 
+            
+            if(bug) printf("CURRETN SCOPE %s\n", currentScope);
+
+            tmp2 = st.lookupNode(currentScope);  
+
+           if(tree->child[0] != NULL && tree->child[0]->nodekind == ExprK && tree->child[0]->kind.expr == IdK){   //if we are returning an ID
+              
+               
+
               tmp = st.lookupNode(tree->child[0]->attr.name);
               if(tmp!= NULL && tmp->isArray){ 
                   printf("ERROR(%d): Cannot return an array.\n", tree->lineno);
+                  numErrs++;
                }
-               else if(tmp != NULL){
+               else if(tmp2 != NULL && tmp != NULL && tmp2->type != tmp->type && tmp2->type != Void ){
+                  printf("ERROR(%d): Function '%s' at line %d is expecting to return ", tree->lineno, currentScope,tmp2->lineno );
+                  exprTypePrint(tmp2->type);
+                  printf(" but got ");
+                  exprTypePrint(tmp->type);
+                  printf(".\n");
+                  numErrs++;
                   tmp->isUsed = true;
                   tree->type = tmp->type;
                }
-
-               
            }
+           else if( tree->child[0] != NULL && tree->child[0]->type != tmp2->type && tmp2->type != Void){
+                  printf("ERROR(%d): Function '%s' at line %d is expecting to return ", tree->lineno, currentScope,tmp2->lineno );
+                  exprTypePrint(tmp2->type);
+                  printf(" but got ");
+                  exprTypePrint(tree->child[0]->type);
+                  printf(".\n");
+                  numErrs++;
+           }
+
+               if(tree->child[0] != NULL && tmp2->type == Void){
+                  printf("ERROR(%d): Function '%s' at line %d is expecting no return value, but return has return value.\n", tree->lineno, currentScope, tmp2->lineno);
+                  numErrs++;
+               }
+         
+            if(tmp2 != NULL && tmp2->type != Void && tree->child[0] == NULL){
+               printf("ERROR(%d): Function '%s' at line %d is expecting to return ", tree->lineno, tmp2->attr.name, tmp2->lineno);
+               exprTypePrint(tmp2->type);
+               printf(" but return has no return value.\n");
+               numErrs++;
+            }
             
+            //printf("Looking at line %d\n", tree->lineno);
+            //if( tree->child[0] != NULL) exprTypePrint(tree->child[0]->type);
+            //if(tmp2 != NULL) exprTypePrint(tmp2->type);
             break;
 
          case BreakK :
            if(bug) printf("Break [line: %d]\n", tree->lineno);
+
+           if( loopDepth == 0){
+              printf("ERROR(%d): Cannot have a break statement outside of loop.\n", tree->lineno);
+              numErrs++;
+            }
+
             break;
 
          default:
@@ -198,6 +323,7 @@ void analyze(TreeNode *tree){
             else 
             {
               if(bug) printf("Const: %d [line: %d]\n", tree->attr.value, tree->lineno);
+              if(bug){exprTypePrint(tree->type); printf("\n");}
               if(tree->kind.expr == IdK){
                  tmp = st.lookupNode(tree->attr.name);
                  if(tmp == NULL){
@@ -214,7 +340,9 @@ void analyze(TreeNode *tree){
 
             tmp =  st.lookupNode(tree->attr.name);
             //st.print(pointerPrintStr); 
+            if(bug)if(tmp == NULL) printf("ID NOT FOUND\n");
             if(bug && tree->isArray) printf("^ Same ID as ^ %s is array at line %d\n", tree->attr.name, tree->lineno);
+            
             if(tmp == NULL){
                //st.print(pointerPrintStr); 
                printf("ERROR(%d): Symbol '%s' is not declared.\n",tree->lineno, tree->attr.name );
@@ -225,11 +353,14 @@ void analyze(TreeNode *tree){
             }                   
             if(tmp != NULL && (tmp->kind.decl == VarK || tmp->kind.decl == ParamK)){
                
+               //if(1)printf("FOUD a declaration %s %d\n", tmp->attr.name, tmp->isInit);
+               
                tree->type = tmp->type;    //sets ID to what it was declared as
                tree->isInit = tmp->isInit;
                tree->isStatic = tmp->isStatic;
+               tree->isArray = tmp->isArray;
                
-               checkInit(tree, 0);     //this just check IDs and not arrays, so param 2 is useless
+               checkInit(tree, 1);     
             }
             if(tmp != NULL && tmp->kind.decl == FuncK){
                printf("ERROR(%d): Cannot use function '%s' as a variable.\n", tree->lineno, tree->attr.name);
@@ -247,19 +378,30 @@ void analyze(TreeNode *tree){
 
          case AssignK:
            if(bug) printf("Assign [line %d]\n", tree->lineno);
+           bool possibleInit;
+           
 
-            analyze(tree->child[1]);      //analyze everything befores to prevent cases like x = x + 2 thinking rhs x is init
-                                          //it prints out of order
-            if(tree->child[0]->kind.expr==IdK) tmp = st.lookupNode(tree->child[0]->attr.name);
+            if(tree->child[0]->kind.expr==IdK) tmp = st.lookupNode(tree->child[0]->attr.name);  //An ID
 
-            if(tree->child[0]->kind.expr == OpK && tree->child[0]->child[0]->kind.expr == IdK) {
+            if(tree->child[0]->kind.expr == OpK && tree->child[0]->child[0]->kind.expr == IdK) {   //An array
                tmp = st.lookupNode(tree->child[0]->child[0]->attr.name);            
             }
-            if(tmp != NULL) tmp->isInit = true;
+
+            if(tmp != NULL) possibleInit  = tmp->isInit;       // Hold the var if the found ID is init or not
+
             tree->child[0]->isInit = true;
-            analyze(tree->child[0]);
+            if(tmp != NULL) tmp->isInit = true;
+            analyze(tree->child[0]);            //when we are looking at child 0, its inherently initilized
+      
+            tree->child[0]->isInit = possibleInit;     // If/ when the left ID is used on itself, it must be whatever init state it was before we just initilized it (possibly again)
+            if(tmp != NULL) {tmp->isInit = possibleInit;}
+
             
-            
+            analyze(tree->child[1]);                  // x= x+3; x is not init until after we process child 1
+
+            tree->child[0]->isInit = true;      // now it is deffinitly initilized
+            if(tmp != NULL) tmp->isInit = true;                 //Set the declared node to init
+
             checkType(tree, tree->attr.op);
             tree->type = tree->child[0]->type;
             
@@ -268,7 +410,7 @@ void analyze(TreeNode *tree){
          case CallK:
            if(bug) printf("Call: %s [line: %d]\n", tree->attr.name, tree->lineno);
             //st.print(pointerPrintStr);
-            inCall = true;
+            
             tmp = st.lookupNode(tree->attr.name);
             if(tmp != NULL){
                tree->type = tmp->type;
@@ -288,7 +430,11 @@ void analyze(TreeNode *tree){
             } 
 
             analyze(tree->child[0]);
-            inCall = false;
+
+            if(!tree->isErr) compareParams(tree);     //Done after we process the call params aka child 0
+
+            if(tmp != NULL) tmp->isUsed = true;
+
             break;
 
          default:
@@ -326,24 +472,37 @@ void analyze(TreeNode *tree){
          switch (tree->kind.decl){
             case FuncK:
              if(bug)  printf("Func %s line %d \n", tree->attr.name, tree->lineno );
-               
+
+               countPerams(tree);               //Set number of parameters
+
                tmp = st.lookupNode(tree->attr.name);
                
                if(tmp == NULL) {st.insert(tree->attr.name, (TreeNode*) tree); }
-               
+               if(strcmp("main", tree->attr.name) == 0){
+                  //printf("Main found!\n");
+                  tree->isUsed = true;
+               }
                   st.enter(tree->attr.name);
-                  NEW_SCOPE = true;  
-               
+                  NEW_SCOPE = true; 
+                  currentScope = strdup(tree->attr.name); 
+                  Return_FLAG = false;
                //printf("ENTERED\n");
 
-               tree->isUsed = true;       //Added the tree node to the global scope, but do not want it to register as useable
+               
                analyze(tree->child[0]);    //compound stmt will handle any param
                analyze(tree->child[1]); 
+               if(!Return_FLAG && tree->type != Void){
+                  printf("WARNING(%d): Expecting to return ", tree->lineno);
+                  exprTypePrint(tree->type);
+                  printf(" but function '%s' has no return statement.\n", tree->attr.name);
+                  numWarns++;
+               }
                if(tree->child[1] == NULL){
                   //printf("CHild 1 is null in funck %d\n", tree->lineno);
                   st.applyToAll(wasUsed);
                   st.leave();
                }
+
                //st.print(pointerPrintStr);            
                //printf("LEVING\n");
                break;
@@ -352,6 +511,19 @@ void analyze(TreeNode *tree){
                //printf("VAR static %d\n", tree->isStatic);
                if(tree->child[0] != NULL){
                   analyze(tree->child[0]);
+
+                  if( tree->child[0]->type != tree->type){
+                     printf("ERROR(%d): Variable '%s' is of ", tree->lineno, tree->attr.name);
+                     exprTypePrint(tree->type);
+                     printf(" but is being initialized with an expression of ");
+                     exprTypePrint(tree->child[0]->type);
+                     printf(".\n");
+                     numErrs++;
+                  }
+                  if(tree->child[0]->kind.expr == IdK){
+                     printf("ERROR(%d): Initializer for variable '%s' is not a constant expression.\n", tree->lineno, tree->attr.name);
+                     numErrs++;
+                  }
                   tree->isInit = true;
                }                
                if (tree->isArray == true){
@@ -422,12 +594,12 @@ if(tree->child[1] != NULL) right = tree->child[1];
       case LESS :
       case GRETEQ :
       case LESSEQ :
-         if(left != NULL) checkInit(left, 0);
-         if(right!= NULL ) checkInit(right, 1);
+         // if(left != NULL) checkInit(left, 0);
+         // if(right!= NULL ) checkInit(right, 1);
             // printf("' looking for lhs is of ");
             // exprTypePrint(right->type);
             // printf(" %d\n", tree->lineno);
-         if(left->type != Integer && left->type != Char && !left->isErr){
+         if(left->type != Integer && left->type != Char && left->type != UndefinedType){
             //printf("NAME %s type %d \n", tree->child[0]->attr.name, tree->child[0]->type);
             printf("ERROR(%d): '",tree->lineno );
             TokenPrint(tree->attr.op, "");
@@ -438,7 +610,7 @@ if(tree->child[1] != NULL) right = tree->child[1];
             numErrs++;
             left->isErr = true;
          }
-         if(right->type != Integer && right->type != Char && !right->isErr){
+          if(right->type != Integer && right->type != Char && right->type != UndefinedType){
             //printf("NAME %s type %d \n", tree->child[0]->attr.name, tree->child[0]->type);
             printf("ERROR(%d): '",tree->lineno );
             TokenPrint(tree->attr.op, "");
@@ -450,7 +622,7 @@ if(tree->child[1] != NULL) right = tree->child[1];
             right->isErr = true;
          }
 
-         if(left->type != right->type && !left->isErr && !right->isErr){
+         else if(left->type != right->type && left->type != UndefinedType && right->type != UndefinedType ){
             //printf("NAME %s type %d \n", tree->child[0]->attr.name, tree->child[0]->type);
             printf("ERROR(%d): '",tree->lineno );
             TokenPrint(tree->attr.op, "");
@@ -474,10 +646,10 @@ if(tree->child[1] != NULL) right = tree->child[1];
       case EQEQ:
       case NOTEQ:
 
-         if(left != NULL) checkInit(left, 0);
-         if(right!= NULL ) checkInit(right,1);         
+         // if(left != NULL) checkInit(left, 0);
+         // if(right!= NULL ) checkInit(right,1);         
 //printf("Tyep %d and %d line %d\n", left->type, right->type, tree->lineno);
-         if(left->type != right->type && !left->isErr && !right->isErr && left->type != Void && right->type != Void){
+         if(left->type != right->type && left->type != UndefinedType && right->type != UndefinedType && left->type != Void && right->type != Void){
             
             //printf("NAME %s type %d \n", tree->child[0]->attr.name, tree->child[0]->type);
             printf("ERROR(%d): '",tree->lineno );
@@ -491,7 +663,7 @@ if(tree->child[1] != NULL) right = tree->child[1];
             numErrs++;
             tree->isErr = true;
          }
-         else if(left->type != Integer && left->type != Char && left->type != Bool && !left->isErr){
+         else if(left->type != Integer && left->type != Char && left->type != Bool && left->type != UndefinedType){
             //printf("NAME %s type %d \n", tree->child[0]->attr.name, tree->child[0]->type);
             printf("ERROR(%d): '",tree->lineno );
             TokenPrint(tree->attr.op, "");
@@ -502,7 +674,7 @@ if(tree->child[1] != NULL) right = tree->child[1];
             numErrs++;
             left->isErr = true;
          }
-        else  if(right->type != Integer && right->type != Char && right->type != Bool && !right->isErr){
+        else  if(right->type != Integer && right->type != Char && right->type != Bool && right->type != UndefinedType){
             //printf("NAME %s type %d \n", tree->child[0]->attr.name, tree->child[0]->type);
             printf("ERROR(%d): '",tree->lineno );
             TokenPrint(tree->attr.op, "");
@@ -520,9 +692,9 @@ if(tree->child[1] != NULL) right = tree->child[1];
 
       case AND:
       case OR :
-         if(left != NULL) checkInit(left, 0);
-         if(right!= NULL ) checkInit(right,1);
-         if(left->type != Bool && !left->isErr){
+         // if(left != NULL) checkInit(left, 0);
+         // if(right!= NULL ) checkInit(right,1);
+         if(left->type != Bool && left->type != UndefinedType){
             printf("ERROR(%d): '",tree->lineno );
             TokenPrint(tree->attr.op, "");
             printf("' requires operands of type bool but lhs is of ");
@@ -530,7 +702,7 @@ if(tree->child[1] != NULL) right = tree->child[1];
             printf(".\n");
             numErrs++;
          }
-          if(right->type != Bool && !right->isErr){
+          if(right->type != Bool && right->type != UndefinedType){
             printf("ERROR(%d): '",tree->lineno );
             TokenPrint(tree->attr.op, "");
             printf("' requires operands of type bool but rhs is of ");
@@ -549,6 +721,9 @@ break;
                unaryError(tree, (char*)"bool");
             }
          }
+         else if(left->type != Bool){
+            unaryError(tree, (char*)"bool");
+         }
          notWithArrays(tree);
       
 break;
@@ -566,7 +741,7 @@ break;
          left->isInit = true;    //being on the left of an equal inits it
 
          left->isInit = true;                    //For += -= /= *=
-         if(right!= NULL ) checkInit(right, 1);
+         // if(right!= NULL ) checkInit(right, 1);
 
          typeInts(tree);
 
@@ -578,8 +753,8 @@ break;
 
       
 
-      if(left != NULL) checkInit(left, 0);
-      if(right!= NULL ) checkInit(right, 1);
+      // if(left != NULL) checkInit(left, 0);
+      // if(right!= NULL ) checkInit(right, 1);
        
 
       //if(tree->child[0]->attr.name != NULL); tmp =  st.lookupNode(tree->child[0]->attr.name);
@@ -605,6 +780,9 @@ break;
                unaryError(tree, (char*)"int");
             }
          }
+         else if(left->type != Integer){
+            unaryError(tree, (char*)"int");
+         }
 
          
 
@@ -618,8 +796,8 @@ break;
       if(!tree->unary) typeInts(tree);
 
       if(bug) printf("MIN MUL %d\n", tree->lineno);
-      if(left != NULL && !tree->unary) checkInit(left, 0);
-      if(right!= NULL && !tree->unary) checkInit(right, 1);
+      // if(left != NULL && !tree->unary) checkInit(left, 0);
+      // if(right!= NULL && !tree->unary) checkInit(right, 1);
       
 break;
 
@@ -627,92 +805,33 @@ break;
          //printf("L: %s R: %s\n", tree->child[0]->attr.name, tree->child[1]->attr.name );
          dealWithArrays(tree);
 break;
-
-      case STATIC: 
-      printf("static");
-         break;
-      case INT:
-      printf("int");
-         break;
-      case BOOL:
-      printf("bool");
-         break;
-      case CHAR :
-      printf("char");
-         break;
-      case IF :
-      printf("if");
-         break;
-      case ELSE :
-      printf("else");
-         break;
-      case ELSIF:
-      printf("elsif");
-         break;
-      case THEN :
-      printf("then");
-         break;
-      case WHILE:
-      printf("while");
-         break;
-      case DO:
-      printf("do");
-         break;
-      case LOOP:
-      printf("loop");
-         break;
-      case FOREVER:
-      printf("forever");
-         break;
-      case BREAK:
-      printf("break");
-         break;
-
-      case RETURN:
-      printf("return");
-         break;
-      case TRUE :
-      printf("true");
-         break; 
-      case FALSE:
-         printf("false");
-         break;
-
-
-      case RIndex :
-         printf("]");
-         break;
-      case LP :
-         printf("(");
-         break;
-      case RP :
-         printf(")");
-         break;      
+   
       default:
          printf("Error! in printing token %d\n", token);
          break;
    }
 }
+
 void checkInit(TreeNode *tree, int side){
    //if(err)printf("ERR %d \n", tree->lineno);
    TreeNode *tmp;
    //printf("nodekind %d static %d line %d\n", tree->nodekind, tree->isStatic, tree->lineno); 
-    if(tree != NULL && tree->nodekind == ExprK && !tree->isErr && !inCall ){
+    if(tree != NULL && tree->nodekind == ExprK && !tree->isErr  ){
        
          if( tree->kind.expr == IdK && !tree->isStatic){
             tmp = st.lookupNode(tree->attr.name);
             //printf("nodekind after search %d static %d line %d\n", tmp->nodekind, tmp->isStatic, tree->lineno); 
-            if(!tree->isInit && !tree->isArray ){
+            if(!tree->isInit && !tree->isArray && side == 1 ){
                
-               printf("WARNING(%d): Variable %s may be uninitialized when used here.\n", tree->lineno, tree->attr.name);
+               printf("WARNING(%d): Variable '%s' may be uninitialized when used here.\n", tree->lineno, tree->attr.name);
                numWarns++;    
                tree->isInit = true;
                tmp->isInit = true;
                err = true;
             }
-            if(!tree->isInit && tree->isArray){
+            if(!tree->isInit && tree->isArray && side == 1){
                tmp = st.lookupNode(tree->attr.name);
-               printf("WARNING(%d): Variable %s may be uninitialized when used here.\n", tree->lineno, tree->attr.name);
+               printf("WARNING(%d): Variable '%s' may be uninitialized when used here.\n", tree->lineno, tree->attr.name);
                numWarns++;    
                tree->isInit = true; 
                tmp->isInit = true;
@@ -720,15 +839,20 @@ void checkInit(TreeNode *tree, int side){
             }
          }
          if(tree->kind.expr == OpK){
-           if(bug) printf("Its an OPERATOR line %d ", tree->lineno);
+            if(bug) printf("Its an OPERATOR line %d ", tree->lineno);
             if(bug){TokenPrint(tree->attr.op, ""); printf(" \n");}
-            if(tree->attr.op == LIndex && tree->child[0]->kind.expr == IdK) tmp = st.lookupNode(tree->child[0]->attr.name);
 
-            if( side == 0 && tmp != NULL ){
-               tree->child[0]->isInit = tmp->isInit;
+            if(tree->child[0] != NULL && tree->attr.op == LIndex && tree->child[0]->kind.expr == IdK){
+               tmp = st.lookupNode(tree->child[0]->attr.name);
+               if( tmp != NULL ){
+                  tree->child[0]->isInit = tmp->isInit;
+               }
             }
+
+
+
             if(side == 1 && (tree->attr.op == LIndex ) && tmp!= NULL && !tmp->isInit){
-               printf("WARNING(%d): Variable %s may be uninitialized when used here.\n", tree->lineno, tree->child[0]->attr.name);
+               printf("WARNING(%d): Variable '%s' may be uninitialized when used here.\n", tree->lineno, tree->child[0]->attr.name);
                numWarns++;    
                tree->isInit = true;
                tree->child[0]->isInit = true;
@@ -744,7 +868,7 @@ void typeInts(TreeNode *tree){
    left = tree->child[0];
    right = tree->child[1];
 
-      if(left != NULL && left->type!= Integer && !left->isErr){
+      if(left != NULL && left->type!= Integer && left->type != UndefinedType){
          printf("ERROR(%d): '",tree->lineno );
             TokenPrint(tree->attr.op, "");
             printf("' requires operands of type int but lhs is of ");
@@ -752,7 +876,7 @@ void typeInts(TreeNode *tree){
             printf(".\n");
             numErrs++;
       }
-      if(right != NULL && right->type!= Integer && !right->isErr){
+      if(right != NULL && right->type!= Integer && right->type != UndefinedType){
          printf("ERROR(%d): '",tree->lineno );
             TokenPrint(tree->attr.op, "");
             printf("' requires operands of type int but rhs is of ");
@@ -770,7 +894,11 @@ void wasUsed(std::string sym, void *ptr){
    //st.print(pointerPrintStr);
    if(tmp != NULL){
       if(!tmp->isUsed ){
-         printf("WARNING(%d): The variable %s seems not to be used.\n", tmp->lineno, sym.c_str());
+         printf("WARNING(%d): The ", tmp->lineno);
+         if(tmp->kind.decl == ParamK) printf("parameter");
+         if(tmp->kind.decl == VarK) printf("variable");
+         if(tmp->kind.decl == FuncK) printf("function");
+         printf(" '%s' seems not to be used.\n", sym.c_str());
          numWarns++;
       }
    }
@@ -793,7 +921,8 @@ void dealWithArrays(TreeNode *tree){
          tree->type = ch1->type;
       }
 
-     if(ch1 == NULL || !ch1->isArray ){
+     if( ch1 != NULL && (!ch1->isArray && !ch1->isErr) ){
+      
         printf("ERROR(%d): Cannot index nonarray '%s'.\n", tree->lineno, tree->child[0]->attr.name );
         numErrs++;
         err = true;
@@ -808,7 +937,7 @@ void dealWithArrays(TreeNode *tree){
       tree->isErr = true;
    }
    if(tree->child[1] != NULL){
-      if(tree->child[1]->type != Integer && tree->child[0]->kind.expr == IdK  && !tree->child[1]->isErr){
+      if(tree->child[1]->type != Integer && tree->child[0]->kind.expr == IdK  && tree->child[1]->type != UndefinedType){
          printf("ERROR(%d): Array '%s' should be indexed by type int but got ", tree->lineno, tree->child[0]->attr.name);
          exprTypePrint(tree->child[1]->type);
          printf(".\n");
@@ -833,6 +962,7 @@ void dealWithArrays(TreeNode *tree){
 
    tree->isArray = true;
 }
+
 void onlyArrays(TreeNode* tree){
    TreeNode *tmp;
 

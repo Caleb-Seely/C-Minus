@@ -73,6 +73,7 @@ private:
     bool debugFlg;
 
 public:
+
     SymbolTable();
     void debug(bool state);                          // sets the debug flags
     int depth();                                     // what is the depth of the scope stack?
@@ -92,6 +93,8 @@ public:
 
     TreeNode* lookupNode(std::string sym);
     void *lookupSingle(std::string sym);
+
+
 };
 
 #endif
