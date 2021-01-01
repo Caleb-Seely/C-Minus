@@ -1,0 +1,281 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0053)http://marvin.cs.uidaho.edu/Teaching/CS445/pas05.html -->
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>CS445 - Assignment 5</title>
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    
+    <meta http-equiv="content-language" content="">
+    <link href="./CS445 - Assignment 5_files/style.css" rel="stylesheet" type="text/css">
+    <link rel="icon" type="image/gif" href="http://marvin.cs.uidaho.edu/Media/Pics/favicon.gif">
+</head>
+
+<body><div id="StayFocusd-infobar" style="display:none;">
+    <img src="chrome-extension://laankejkbhbdhmipfmgcngdelahlfoji/common/img/eye_19x19_red.png">
+    <span id="StayFocusd-infobar-msg"></span>
+    <span id="StayFocusd-infobar-links">
+        <a id="StayFocusd-infobar-never-show">hide forever</a>&nbsp;&nbsp;|&nbsp;&nbsp;
+        <a id="StayFocusd-infobar-hide">hide once</a>
+    </span>
+</div>
+    <div id="page">
+        <div id="header">
+            <h1><a href="http://marvin.cs.uidaho.edu/Teaching/CS445/pas05.html#">CS445 - Assignment 5</a></h1>
+             <p id="subtitle">(Improved Error Handling)</p>
+        </div>   					
+        <div id="menu">
+            <ul>
+                <li><a href="http://marvin.cs.uidaho.edu/index.html">Home</a></li>
+                <li><a href="http://marvin.cs.uidaho.edu/Teaching/index.html">Teaching</a></li>
+                <li><a href="http://marvin.cs.uidaho.edu/Research/index.html">Research</a></li>
+                <li><a href="http://marvin.cs.uidaho.edu/Advising/index.html">Advising</a></li>
+                <li><a href="http://marvin.cs.uidaho.edu/Links/index.html">Links</a></li>
+                <li><a href="http://marvin.cs.uidaho.edu/About/index.html">About</a></li>
+            </ul>
+        </div><!-- header -->    
+        <div id="main">
+            <div id="sidebar">
+<p>
+REWARD: 200 points  <img src="./CS445 - Assignment 5_files/status2.jpg">
+</p><p>
+DUE: Wed Nov 18 at 5PM PDT <br>
+</p><p>
+TEST DATA: <a href="http://marvin.cs.uidaho.edu/Teaching/CS445/testDataA5.tar">testDataA5.tar</a>
+<a href="http://marvin.cs.uidaho.edu/Teaching/CS445/testDataA5.zip">testDataA5.zip</a>
+</p><hr>
+            </div><!-- sidebar -->               
+            <div id="content">
+
+<p> With this assignment, I want to get everyone on track. I want to
+be able to congratulate everyone on having built their own compiler at
+the end of semester! Note that this assignment needs to be done
+quickly so we can work on the final two code generator phase assignments.
+Lots of code is provided so you need to just fold in the code and
+adapt it to your grammar and token names. The objective is to make all
+errors and warnings have the same format and have syntax errors not
+stop the syntax analysis phase.
+
+</p><p>
+ 
+There are several parts to this assignment. 
+<el>
+</el></p><li> Nice yyerror and error count
+</li><li> Insert the error tokens into your grammar
+</li><li> Insert the yyerrok macros into your grammar
+
+
+<h3>Nicer Errors</h3>
+<p> 
+yyerror catches all the message that come back from the parser.  Here
+are some examples of syntax error messages that might come into yyerror from
+the parser if YYERROR_VERBOSE is set:
+</p><p>
+</p><pre>syntax error, unexpected '+'
+syntax error, unexpected ELSE
+syntax error, unexpected '=', expecting '('
+syntax error, unexpected '=', expecting WHILE
+syntax error, unexpected ID, expecting '(' 
+syntax error, unexpected ID, expecting WHILE
+syntax error, unexpected '+', expecting ',' or ';'
+syntax error, unexpected '/', expecting BOOL or INT or VOID 
+syntax error, unexpected ID, expecting $end or BOOL or INT or VOID 
+</pre>
+
+<p> We will put in a line number, format the message like in the
+semantic analysis section, and add some extra info when appropriate.
+Below is the code that will translate these messages. Use this code or
+improve on it if you want <b>as long as it doesn't effect the
+output.</b> Note that the code assumes my names for the tokens. You
+will need to adjust this for your token names!!   In particular I have
+changed the unary minus token to CHSIGN and unary asterisk to SIZEOF.
+This happened in the parser.
+
+</p><p>
+<a href="http://marvin.cs.uidaho.edu/Teaching/CS445/yyerror.cpp">yyerror.cpp</a>,
+<a href="http://marvin.cs.uidaho.edu/Teaching/CS445/yyerror.h">yyerror.h</a>
+
+is code you can use to print out your messages so they conform to a
+standard style. It is free code! To integrate this code into your
+parser you must read and understand yyerror.h. Yes, I mean it. Your
+variables may have different names. <b>NOTE:</b> this software
+includes a tiny sort routine that sorts the expecting tokens to print
+out a message that can be compared despite the order in which you
+declare the tokens in your .y file!
+
+
+</p><p>
+</p><p>
+</p><ul>
+<li>line is the line number where the parser is working at the time 
+of the error.   
+
+</li><li>msg is the extended error message that comes from Bison when the
+YYERROR_VERBOSE macro is set as in using:
+
+<pre>#define YYERROR_VERBOSE
+</pre>
+
+Use this definition in your .y code!  You probably already are.
+
+</li><li>  This code makes the brash assumption that yytext is relevant
+for constants.
+</li></ul> 
+
+<h3>Error Count</h3>
+<p>
+You will continue to ahve two global variables counting
+the number of errors and number of warnings just as in
+the last assignment, but now the count will extend to scanner and
+syntax errors and warnings.
+Warnings will not
+stop the successful compilation of the program.  Keep count of
+both kinds and report at the end of the compile exactly in the
+order and format as in this example:
+</p><p>
+</p><pre>Number of warnings: 0
+Number of errors: 666
+</pre>
+
+<p> I will explain shortly where you get errors and warnings and what
+happens as a result.
+
+</p><p>
+</p><h3>Other Modifications by Phase of the Compiler</h3>
+
+<p> Our compiler now was three phases: lexical analysis (scanner),
+syntax analysis, and semantic analysis. Each phase can produce its own
+errors. Here is the description by phase.   Some of which you have already
+done.
+
+</p><ul> 
+<li><b>Lexical analysis:</b>
+In this phase each input character that is not part of a legal token
+is <b>reported as a warning and the character ignored</b>. That is the
+yylex function <b>does not return a token</b> for these "bad characters" and
+the lexical analysis continues to run.
+Example warning:
+<pre> 
+"ERROR(%d): Invalid or misplaced input character: \"%c\". Character Ignored.\n"
+</pre>
+<p>
+This works easiest in the flex file.
+Finally <b>do NOT</b> return a token.  This way no token is passed back.
+</p><p>
+If a character is more than one character long that gives a warning.
+For instance:
+</p><pre>char z:'dogs and cats';
+z = 'oobleck';
+</pre>
+The warning issued is:
+<pre>WARNING(%d): character is %d characters long and not a single character: %s.  The first char will be used.\n"
+</pre>
+<p>
+If a character is zero characters long that is an error and no token is returned.
+</p><pre>char z:'';
+</pre>
+which gives:
+<pre>"ERROR(%d): Empty character ''.  Characters ignored.\n"
+</pre>
+<p>
+All warnings and errors increment the appropriate counter.
+</p><p>
+</p></li><li><b>Syntax analysis:</b>
+The syntax analysis errors will continue to work as before (except as
+noted below) but these errors will also increase the global error
+count. We will be adding error tokens to our bison grammar to allow
+the parser to match an error creating legal input and keep running. We
+will also add <tt>yyerrok</tt> as needed when we have syncing tokens.
+A list of possible edits is provided below.
+<p>
+</p></li><li><b>Semantic analysis:</b>
+<b>Only if there are no errors</b> in the syntax analysis then 
+you proceed to semantic analysis. 
+The errors in semantic analysis will increase the global error count.
+<p>
+</p></li><li><b>At end of compile:</b>
+Print the total number of errors and warnings from all phases.  For example
+<pre>Number of warnings: 28
+Number of errors: 496
+</pre> 
+or 
+<pre>Number of warnings: 0
+Number of errors: 0
+</pre>
+</li></ul> 
+<p> 
+</p><h3>Further Information on Inserting Error Tokens</h3>
+<p>
+We want to add error tokens so syntactic analysis continues past
+errors.  We do this to help the user get as much useful information
+about their program as we can in one compile.
+
+</p><p> <a href="http://marvin.cs.uidaho.edu/Teaching/CS445/parserErrorList.txt"> Here are places to make edits to your
+grammar</a>. In some cases only the beginning of the actions are
+shown. Sometimes the only thing that is added is the addition of the
+word <tt>yyerrok</tt> which indicates that yyerrok macro should be
+added somewhere in your actions. Your token names, of course, may be
+different but they will be translated into "nice names" below so your
+implementation names will be hidden. Even some of your productions may
+be slightly different. If you can make them the same, do so for ease
+of grading.
+
+</p><p>
+The result of adding these error tokens will be that your compile will now have many
+shift/reduce conflicts, and reduce/reduce conflicts.
+
+</p><p>
+You may have to adjust your grammar a little to get these to fit.  On
+the final grading assignment you will be graded on the actual
+error messages you generate, not where you put your error tokens.
+Try to come as close as you can to my error messages.   The text of the errors should be the same.
+Which are there may vary a little.
+You may miss 10% of the messages or have some extra and it won't count against you.   That is OK.
+</p><p>
+Your program must not halt because of a syntax error.
+</p><p>
+
+</p><h3>Example Input and Output</h3>
+<p>
+</p><pre> 
+bool a;
+int b[100];
+
+int @ max(int x)
+{
+    int z, zz;
+    char c;
+
+    if x&gt;y) z=x 666;
+    else z=y;
+
+    while (666&gt;) {
+       break;
+
+    z = &amp; zz;
+
+} 12
+
+WARNING(4): Invalid or misplaced input character: '@'. Character Ignored.
+ERROR(9): Syntax error, unexpected ')', expecting "or" or "then".
+ERROR(9): Syntax error, unexpected identifier "z", expecting "or" or "then".
+ERROR(9): Syntax error, unexpected numeric constant "666", expecting ';'.
+ERROR(10): Syntax error, unexpected "else".
+ERROR(12): Syntax error, unexpected ')'.
+ERROR(12): Syntax error, unexpected '{', expecting ')'.
+WARNING(15): Invalid or misplaced input character: '&amp;'. Character Ignored.
+ERROR(17): Syntax error, unexpected numeric constant "12".
+Number of warnings: 2
+Number of errors: 7
+</pre>
+
+            </li></div><!-- content -->
+            <div class="clearing">&nbsp;</div> 
+        </div><!-- main -->
+    </div><!-- page -->
+    <div id="footer">
+        <p>Copyright © 2012, original design by <a href="http://www.alphastudio.pl/" target="_blank">Alpha Studio</a> transfigured by R. Heckendorn
+</p>
+    </div>
+
+
+<div class="betternet-wrapper"></div></body></html>
