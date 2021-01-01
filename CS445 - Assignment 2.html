@@ -1,0 +1,469 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0053)http://marvin.cs.uidaho.edu/Teaching/CS445/pas02.html -->
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>CS445 - Assignment 2</title>
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    
+    <meta http-equiv="content-language" content="">
+    <link href="./CS445 - Assignment 2_files/style.css" rel="stylesheet" type="text/css">
+    <link rel="icon" type="image/gif" href="http://marvin.cs.uidaho.edu/Media/Pics/favicon.gif">
+</head>
+
+<body><div id="StayFocusd-infobar" style="display: none; top: 0px;">
+    <img src="chrome-extension://laankejkbhbdhmipfmgcngdelahlfoji/common/img/eye_19x19_red.png">
+    <span id="StayFocusd-infobar-msg"></span>
+    <span id="StayFocusd-infobar-links">
+        <a id="StayFocusd-infobar-never-show">hide forever</a>&nbsp;&nbsp;|&nbsp;&nbsp;
+        <a id="StayFocusd-infobar-hide">hide once</a>
+    </span>
+</div>
+    <div id="page">
+        <div id="header">
+            <h1><a href="http://marvin.cs.uidaho.edu/Teaching/CS445/pas02.html#">CS445 - Assignment 2</a></h1>
+             <p id="subtitle">(The Parser)</p>
+        </div>   					
+        <div id="menu">
+            <ul>
+                <li><a href="http://marvin.cs.uidaho.edu/index.html">Home</a></li>
+                <li><a href="http://marvin.cs.uidaho.edu/Teaching/index.html">Teaching</a></li>
+                <li><a href="http://marvin.cs.uidaho.edu/Research/index.html">Research</a></li>
+                <li><a href="http://marvin.cs.uidaho.edu/Advising/index.html">Advising</a></li>
+                <li><a href="http://marvin.cs.uidaho.edu/Links/index.html">Links</a></li>
+                <li><a href="http://marvin.cs.uidaho.edu/About/index.html">About</a></li>
+            </ul>
+        </div><!-- header -->    
+        <div id="main">
+            <div id="sidebar">
+<p>
+REWARD: 260 points  <img src="./CS445 - Assignment 2_files/status4.jpg">
+</p><p>
+DUE: Sun Oct 4 at 5PM PDT
+</p><p>
+TEST DATA:
+<a href="http://marvin.cs.uidaho.edu/Teaching/CS445/testDataA2.tar">testDataA2.tar</a>,
+<a href="http://marvin.cs.uidaho.edu/Teaching/CS445/testDataA2.zip">testDataA2.zip</a>
+</p><hr>
+
+            </div><!-- sidebar -->               
+            <div id="content">
+
+<h3>The Problem</h3>
+<p>
+This homework consists of these tasks:
+</p><ul>
+<li>Tweak-in some improvements to the interface.
+</li><li>Use Flex and Bison to
+build a parser for the <a href="http://marvin.cs.uidaho.edu/Teaching/CS445/c-Grammar.pdf">C- language</a>.
+</li><li>While doing the parsing you will construct the syntax tree.  This
+is <b>not</b> the full annotated syntax tree yet but just the initial abstract syntax tree.
+</li><li>
+You will write the procedure <b>printTree</b> which will
+print out the tree <b>exactly</b> as I have in the examples I
+give below and in the test data.  Almost the same format is not good enough.  The
+more I have to work to show your output is the same the fewer points you get.
+You need to fill the tree nodes with just enough information to get the tree
+printed correctly.
+Your main program will contain:
+<p>
+</p><pre>yyparse();         // parse and build the tree in the global var syntaxTree.
+if (printTreeFlag) printTree(stdout, syntaxTree);
+</pre>
+<p>
+The first line calls the parser which will store the tree in
+the global called <b>syntaxTree</b> which is defined:
+</p></li></ul>
+
+<center>
+<table><tbody><tr>
+<td><img src="./CS445 - Assignment 2_files/skull.gif"></td><td>
+<b><font color="red">Do not be fooled.  This is a nontrivial homework.
+Do not put off this
+assignment.  It is complicated and detailed. </font></b>
+</td><td><img src="./CS445 - Assignment 2_files/skull.gif"></td>
+</tr></tbody></table> 
+</center>
+
+<p>
+These tasks are described further below. 
+</p><p>
+
+</p><h3>Improving the interface</h3>
+<p>
+When done with this assignment you will have created code that will
+recognize legal <b>C-</b> programs and generate the first pass at
+the abstract syntax tree.
+</p><p>
+
+The parser will be named <b>c-</b> just like last time.  It will read
+and process a stream of tokens from a filename given as an
+argument to the <b>c-</b> command OR from standard input if the 
+filename argument is not present.
+
+</p><p>
+
+I recommend
+using the <a href="http://marvin.cs.uidaho.edu/Teaching/CS445/getopt.txt">getopt</a> routine to handle
+UNIX command line arguments in a uniform and standard way and make your life easier.
+</p><ul>
+<li><a href="http://marvin.cs.uidaho.edu/Teaching/CS445/getopt.txt">The getopt man page</a>
+</li><li><a href="http://marvin.cs.uidaho.edu/Teaching/CS445/ourgetopt.h">The ourgetopt header file</a>
+</li><li><a href="http://marvin.cs.uidaho.edu/Teaching/CS445/ourgetopt.cpp">A ourgetopt replacement</a> that does what gnu getopt does but you can
+compile anywhere.
+</li><li><a href="http://marvin.cs.uidaho.edu/Teaching/CS445/ourgetoptTest.cpp">A ourgetopt example program that takes various options.  Play with this
+to understand how getopt works.</a>
+</li></ul>
+Be sure to use ourgetopt.  It is more resilient than some.
+And be sure to include the getopt code in your tar!
+
+<p>
+
+Your program will now also take (using ourgetopt) the <b>-d</b> option as an argument.   The
+<b>-d</b> option turns on the yydebug flag by setting it to 1.
+For example: <b>c- -d sort.c-</b> should run the <b>c-</b> compiler on
+the program sort.c- and give details of the parsing that is going on.
+While <b>c- sort.c-</b> should simply run the <b>c-</b> compiler.  
+
+</p><p>
+
+The abstract syntax tree will be printed if the <b>-p</b> is given. So
+<b>c- -p sort.c-</b> will print the abstract syntax tree (AST) for the
+assignment and <b>c- sort.c-</b> will not print the AST.
+
+
+</p><h3>The Parser</h3>
+<p>
+
+For the parsing part of the assignment replace your assignment 1 Bison
+grammar with the grammar to parse C- code. A good approach is to
+initially forget about the syntax tree part of the assignment. If you
+get the right grammar into your compiler it will successfully parse
+any <b>C-</b> program. A program that simply recognizes whether a
+program is legal or not is called a <b>recognizer</b>. If you build
+your Bison grammar directly from the grammar supplied, you will find
+that you have the dangling else problem. There are several ways to fix
+this problem. I have discussed one in class. See the <a href="http://marvin.cs.uidaho.edu/Teaching/CS445/danglingElse.html"> handout on the dangling else problem</a>.
+
+</p><p>
+
+To be successful, you need to get a clean compile of your grammar in
+Bison with <b>no shift-reduce or reduce-reduce errors</b>. Those
+indicate that your grammar is ambiguous. Bison will make a decision
+for you and go ahead and generate code making a selection of its
+choice e.g. reduce before shift. But you must decide for yourself and
+fix the grammar to be unambiguous.
+
+</p><p>
+
+<b><font color="red">Coding restriction:</font></b> Do not attempt to
+fix dangling else or any other grammar issue with associativity
+declarations such as <b>%left</b>, <b>%right</b>, or <b>%assoc</b>. Do
+not fix any other problem with your grammar by using the
+<b>%expect</b> feature of Bison. This causes Bison to ignore some
+number of parsing errors and me to deduct points from your assignment.
+Really, you have the knowledge now to do this with out this "feature".
+<b>IMPORTANT: I expect your parser to compile without any parser
+errors.</b>
+
+</p><p>
+Now that your recognizer is working, let's look at the syntax tree I want
+you to produce.  As we will discuss in class, the tree is an abbreviated portion
+of the parse tree containing the parts we are interested in.  Here is a sample 
+TreeNode that I used based on the book.  You can use what you want.  I will be
+giving examples in class based on the one in the book.: 
+</p><pre>typedef struct treeNode
+{
+    // connectivity in the tree
+    struct treeNode *child[MAXCHILDREN];   // children of the node
+    struct treeNode *sibling;              // siblings for the node
+
+    // what kind of node
+    int lineno;                            // linenum relevant to this node
+    NodeKind nodekind;                     // type of node
+    union                                  // subtype of type
+    {
+	DeclKind decl;                     // used when DeclK
+	StmtKind stmt;                     // used when StmtK
+	ExpKind exp;                       // used when ExpK
+    } kind;
+    
+    // extra properties about the node depending on type of the node
+    union                                  // relevant data to type -&gt; attr
+    {
+        OpKind op;                         // type of token (same as in bison)
+	int value;                         // used when an integer constant or boolean
+        unsigned char cvalue               // used when a character
+	char *string;                      // used when a string constant
+	char *name;                        // used when IdK
+    } attr;                                 
+    ExpType expType;		           // used when ExpK for type checking
+    bool isArray;                          // is this an array
+    bool isStatic;                         // is staticly allocated?
+
+    // even more semantic stuff will go here in later assignments.
+} TreeNode;
+</pre>
+<p>
+This design is stolen straight from the book.  This way you can
+use the one in the Tiny compiler in the book as an example to work from.  Ours has to
+have extra features and node types.  We will discuss this in detail in
+class.  Feel free to use a class rather than a struct in this case if you like.
+Or feel free to use the modern struct rather than using typedefs.  I do.
+You can actually use any data structure you like as long as the output
+matches mine and it builds a tree of the same shape as mine.   You
+will need to traverse the tree to do all the remaining assignments.
+
+</p><p>
+To encode the program as a tree you need to make the right nodes
+at the right steps in the parsing.  When you need to make a node you
+will use routines you write similar to the <b>newStmtNode</b> 
+function in <b>util.c</b> for the Tiny language in the book. 
+These nodes will be passed up the
+tree as pointers and assembled as in the tiny example in the book.
+This means that many of the nonterminals will be of type pointer to a node!
+<b><font color="red">Coding restriction:</font></b>
+<b>Do not use YYSTYPE</b> as used in the book.  This subverts the type checking features that
+are there to <b>help you</b>.  I will take off for using it.
+USE THE UNION Luke!   Here is an example of
+what could be in your union.   It is up to you what you want to put
+in your union.  This is influenced by the types you want for your
+nonterminals.  Mine is a bit simpler for example.:
+</p><pre>%union { 
+    ExpType type;            // typespec to pass up in a declaration like int, char, or bool
+    TokenData *tokenData;    // token data comes in on tokens from yylex() in the $ variables
+    TreeNode *tree;          // for nonterminals.   these tree nodes as you build the tree
+}
+</pre>
+<p> 
+
+</p><h3>The Parser and printTree</h3>
+<p>
+So what should the tree look like for a given program?
+This is essentially described the the Bison code.  I think
+the best way to describe this is in class and by example.
+</p><p>
+To understand the examples you must understand the output format
+of the <b>printTree</b> function.
+The <b>printTree</b> function prints the the important 
+information contained in the node.  It then applies the <b>printTree</b> function
+to all the nonnull children and prints them out numbered starting with child[0] being numbered 
+"Child 0" etc.  It then it applies <b>printTree</b> to the
+<b>sibling</b> pointer if it is nonnull.  The first sibling
+found is numbered 1.  Reading the syntax tree printed
+for sample input programs shows you what to do in each case.
+I will supply you with a crazy number of examples.
+
+For example, given this program:
+</p><pre> 
+// C-F20
+int main()
+{
+    int x;
+    int y[5];
+    bool b;
+
+    b = true | false &amp; 11 + 22 * 33 / 44 &gt; 55;
+
+    if (666&gt;777) {
+        x = 111;
+    }
+    else y[3] = x+222;
+
+    while (x&gt;999) {
+        x = 333;
+        if (x&lt;9) break;
+        x = 444;
+        break;
+   }
+
+   for (z in y) if (z&gt;x) x = z;
+}
+</pre>
+<p>
+you should get the following output from your <b>c-</b>.
+This is the output I will compare against in the tests!
+</p><p>
+</p><pre>Func main returns type int [line: 2]
+.   Child: 1  Compound [line: 3]
+.   .   Child: 0  Var x of type int [line: 4]
+.   .   Sibling: 1  Var y is array of type int [line: 5]
+.   .   Sibling: 2  Var b of type bool [line: 6]
+.   .   Child: 1  Assign: = [line: 8]
+.   .   .   Child: 0  Id: b [line: 8]
+.   .   .   Child: 1  Op: | [line: 8]
+.   .   .   .   Child: 0  Const: true [line: 8]
+.   .   .   .   Child: 1  Op: &amp; [line: 8]
+.   .   .   .   .   Child: 0  Const: false [line: 8]
+.   .   .   .   .   Child: 1  Op: &gt; [line: 8]
+.   .   .   .   .   .   Child: 0  Op: + [line: 8]
+.   .   .   .   .   .   .   Child: 0  Const: 11 [line: 8]
+.   .   .   .   .   .   .   Child: 1  Op: / [line: 8]
+.   .   .   .   .   .   .   .   Child: 0  Op: * [line: 8]
+.   .   .   .   .   .   .   .   .   Child: 0  Const: 22 [line: 8]
+.   .   .   .   .   .   .   .   .   Child: 1  Const: 33 [line: 8]
+.   .   .   .   .   .   .   .   Child: 1  Const: 44 [line: 8]
+.   .   .   .   .   .   Child: 1  Const: 55 [line: 8]
+.   .   Sibling: 1  If [line: 10]
+.   .   .   Child: 0  Op: &gt; [line: 10]
+.   .   .   .   Child: 0  Const: 666 [line: 10]
+.   .   .   .   Child: 1  Const: 777 [line: 10]
+.   .   .   Child: 1  Compound [line: 10]
+.   .   .   .   Child: 1  Assign: = [line: 11]
+.   .   .   .   .   Child: 0  Id: x [line: 11]
+.   .   .   .   .   Child: 1  Const: 111 [line: 11]
+.   .   .   Child: 2  Assign: = [line: 13]
+.   .   .   .   Child: 0  Op: [ [line: 13]
+.   .   .   .   .   Child: 0  Id: y [line: 13]
+.   .   .   .   .   Child: 1  Const: 3 [line: 13]
+.   .   .   .   Child: 1  Op: + [line: 13]
+.   .   .   .   .   Child: 0  Id: x [line: 13]
+.   .   .   .   .   Child: 1  Const: 222 [line: 13]
+.   .   Sibling: 2  While [line: 15]
+.   .   .   Child: 0  Op: &gt; [line: 15]
+.   .   .   .   Child: 0  Id: x [line: 15]
+.   .   .   .   Child: 1  Const: 999 [line: 15]
+.   .   .   Child: 1  Compound [line: 15]
+.   .   .   .   Child: 1  Assign: = [line: 16]
+.   .   .   .   .   Child: 0  Id: x [line: 16]
+.   .   .   .   .   Child: 1  Const: 333 [line: 16]
+.   .   .   .   Sibling: 1  If [line: 17]
+.   .   .   .   .   Child: 0  Op: &lt; [line: 17]
+.   .   .   .   .   .   Child: 0  Id: x [line: 17]
+.   .   .   .   .   .   Child: 1  Const: 9 [line: 17]
+.   .   .   .   .   Child: 1  Break [line: 17]
+.   .   .   .   Sibling: 2  Assign: = [line: 18]
+.   .   .   .   .   Child: 0  Id: x [line: 18]
+.   .   .   .   .   Child: 1  Const: 444 [line: 18]
+.   .   .   .   Sibling: 3  Break [line: 19]
+.   .   Sibling: 3  For [line: 22]
+.   .   .   Child: 0  Var z of type int [line: 22]
+.   .   .   Child: 1  Id: y [line: 22]
+.   .   .   Child: 2  If [line: 22]
+.   .   .   .   Child: 0  Op: &gt; [line: 22]
+.   .   .   .   .   Child: 0  Id: z [line: 22]
+.   .   .   .   .   Child: 1  Id: x [line: 22]
+.   .   .   .   Child: 1  Assign: = [line: 22]
+.   .   .   .   .   Child: 0  Id: x [line: 22]
+.   .   .   .   .   Child: 1  Id: z [line: 22]
+</pre> 
+<p>
+<img src="./CS445 - Assignment 2_files/control2.png">Tree as a png file
+</p><p>
+In the cases where there is an absent optional expression or statement the
+corresponding child pointer is set to NULL (i.e. 0).
+For example compound statements might not have any declarations so <b>child[0]</b>
+pointer would be set to NULL.  Return optionally takes an expression.  If there isn't an
+expression then the <b>Child[0]</b> pointer is NULL.  The while statement might not
+have a body: for example <b>while (searching());</b> in which case <b>child[1]</b>
+is NULL.  The default for unneeded children and siblings is always the NULL pointer!
+<b>This means your code has to check for NULL pointers and alter its behavior.</b>
+Use defensive programming and you will save time!  Never use a pointer without
+checking it is non-null.  (You can use safe pointer objects if you like.  Maybe overkill?)
+</p><p>
+
+</p><p>
+<b>HINT:</b> The yacc code in the book is a good example of how to
+connect the nodes you create.  The node create code is a good model
+for how to create nodes and print a tree.  Use your notes from class
+on how to put the rest of it together.  The calculator example we did in class works
+great for a example of how to organize the interaction between flex and bison parts.
+</p><p>
+Sizes of arrays, locations in memory, etc will all be handled in latter assignments.
+</p><p>
+IMPORTANT: For this assignment, I will only give you legal C- code.
+Error handling is coming.
+
+</p><h2>Nonterminal Names in your Bison Grammar</h2>
+
+My Bison grammar uses shortened names as well as
+changes required for this assignment.  The reasons are specifically:
+<ol>
+<li> I have abbreviated nonterminal names to shorten line length and
+improve reability of Bison code and output. Really helps.
+
+</li><li> You have to implement the dangling else solution in the grammar as
+part of this assignment or it won't compile.  And the solution
+has to work with looping commands. See the doc on dangling else on
+the class page. That changes the grammar and is why some of the names
+are added or missing. That is a big helpful hint!   Why these nonterminals
+added and subtracted?
+
+</li><li> I also used assignOp for all assign operators much like mulop and sumop.
+So that is an added non terminal.
+</li></ol>
+
+<pre>BisonGrammar            c-Grammar               
+------------            ---------
+andExp		      |	andExpression
+argList			argList
+args			args
+assignOp	      &lt;
+breakStmt		breakStmt
+call			call
+compoundStmt		compoundStmt
+constant		constant
+decl		      |	declaration
+declList	      |	declarationList
+exp		      |	expression
+expStmt		      |	expressionStmt
+factor			factor
+funDecl		      |	funDeclaration
+immutable		immutable
+		      &gt;	iterationStmt
+localDecls	      |	localDeclarations
+matched		      &lt;
+mulExp		      |	mulExpression
+mulOp		      |	mulop
+mutable			mutable
+paramId			paramId
+paramIdList		paramIdList
+paramList		paramList
+paramTypeList		paramTypeList
+params			params
+program			program
+relExp		      |	relExpression
+relOp			relop
+returnStmt		returnStmt
+scopedVarDecl	      |	scopedVarDeclaration
+		      &gt;	selectionStmt
+simpleExp	      |	simpleExpression
+stmt		      |	statement
+stmtList	      |	statementList
+sumExp		      |	sumExpression
+sumOp			sumop
+typeSpec	      |	typeSpecifier
+unaryExp	      |	unaryExpression
+unaryRelExp	      |	unaryRelExpression
+unaryOp			unaryop
+unmatched	      &lt;
+varDecl		      | varDeclaration
+varDeclId		varDeclId
+varDeclInit	      |	varDeclInitialize
+varDeclList		varDeclList
+</pre>
+
+<h2>Submission</h2>
+
+<p> Homework will be submitted as an <b>uncompressed</b> tar file
+that contains no subdirectories.
+The tar file is submitted to the class submission page.
+You can submit as many times as you like.
+<b>The LAST file you submit BEFORE the deadline will be the one
+graded.</b> Absolutely, no late papers.  For all submissions you will
+receive email at your uidaho address showing how your file performed
+on the pre-grade tests.  The grading program will use more extensive
+tests, so thoroughly test your program with inputs of your own.
+
+Your code should compile and run with runtime errors such as seg faults.
+If it doesn't, it is considered nearly ungradable.
+            </p></div><!-- content -->
+            <div class="clearing">&nbsp;</div> 
+        </div><!-- main -->
+    </div><!-- page -->
+    <div id="footer">
+        <p>Copyright © 2012, original design by <a href="http://www.alphastudio.pl/" target="_blank">Alpha Studio</a> transfigured by R. Heckendorn
+</p>
+    </div>
+
+
+<div class="betternet-wrapper"></div></body></html>

@@ -48,24 +48,58 @@ extern int yydebug;
     CHAR_ERR = 258,
     KEY = 259,
     NUMCONST = 260,
-    ID = 261,
-    CHARCONST = 262,
-    CHARCONST_ESC = 263,
-    RANGE = 264,
-    STRINGCONST = 265,
-    BOOLCONST = 266,
-    OP = 267,
-    INVALID = 268,
-    ADDASS = 269,
-    SUBASS = 270,
-    MULASS = 271,
-    DIVASS = 272,
-    DEC = 273,
-    INC = 274,
-    NOTEQ = 275,
-    EQ = 276,
-    LESSEQ = 277,
-    GRETEQ = 278
+    CHARCONST = 261,
+    CHARCONST_ESC = 262,
+    RANGE = 263,
+    STRINGCONST = 264,
+    QMARK = 265,
+    MULTIPLY = 266,
+    MINUS = 267,
+    PERCENT = 268,
+    DIV = 269,
+    PLUS = 270,
+    LESS = 271,
+    GRET = 272,
+    EQ = 273,
+    SEMI = 274,
+    LIndex = 275,
+    RIndex = 276,
+    LB = 277,
+    RB = 278,
+    LP = 279,
+    RP = 280,
+    COM = 281,
+    COL = 282,
+    EQEQ = 283,
+    IF = 284,
+    ELSE = 285,
+    ELSIF = 286,
+    THEN = 287,
+    WHILE = 288,
+    DO = 289,
+    LOOP = 290,
+    FOREVER = 291,
+    BREAK = 292,
+    AND = 293,
+    OR = 294,
+    NOT = 295,
+    RETURN = 296,
+    TRUE = 297,
+    FALSE = 298,
+    ADDASS = 299,
+    SUBASS = 300,
+    MULASS = 301,
+    DIVASS = 302,
+    DEC = 303,
+    INC = 304,
+    NOTEQ = 305,
+    LESSEQ = 306,
+    GRETEQ = 307,
+    ID = 308,
+    INT = 309,
+    BOOL = 310,
+    CHAR = 311,
+    STATIC = 312
   };
 #endif
 
@@ -74,12 +108,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 20 "parser.y" /* yacc.c:1909  */
+#line 27 "parser.y" /* yacc.c:1909  */
 
     TokenData *Token_Data;
-    double value;
+    TreeNode *Tree;
+    ExpType type;
 
-#line 83 "parser.tab.h" /* yacc.c:1909  */
+#line 118 "parser.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
