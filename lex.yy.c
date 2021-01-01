@@ -639,13 +639,13 @@ char *yytext;
          if( String_Value[1] == 92){
             
             if(String_Value[2] ==110 ){
-               printf("MADE it %s\n", String_Value);
-               String_Value[1] = 10 ;
+               //printf("MADE it %s\n", String_Value);   //Not sure this works
+               String_Value[1] = 10 ;  //New line
                
             }
             else if(String_Value[2] ==48 ){
-               printf("MADE it %s\n", String_Value);
-               String_Value[1] = 0 ;
+               //printf("MADE it %s\n", String_Value);
+               String_Value[1] = 0 ;   //Null
                
             }
             else{

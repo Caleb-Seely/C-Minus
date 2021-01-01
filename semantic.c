@@ -325,9 +325,10 @@ void analyze(TreeNode *tree){
          
          case ConstantK:        
             if(tree->type == Bool ){
-             if(bug)  printf("Const bool line%d\n", tree->lineno);
-
-            }  
+             if(bug) printf("Const bool line %d\n", tree->lineno);
+               if(tree->attr.value == FALSE) tree->arraySize = 0;     //Using arra size because its open here
+               if(tree->attr.value == TRUE) tree->arraySize = 1;     //Using arra size because its open here
+            }              
             else if(tree->type == CharInt){
               if(bug) printf("Const char line %d\n", tree->lineno);
             }
@@ -464,7 +465,7 @@ void analyze(TreeNode *tree){
          }
       }
       else if (tree->nodekind == DeclK){
-         if(bug) printf("---Declk--- %s\n", tree->attr.name);
+         if(bug) printf("---Declk--- %s\n", tree->TD->Token_Str);
          //printf("THE NAME %s\n", tree->TD->Token_Str);
          if(tree->isArray){
             if(tree->TD != NULL){
@@ -526,7 +527,8 @@ void analyze(TreeNode *tree){
                
                tree->memType = Global;
                tree->memSize = 1;
-               
+               tree->offset = Loffset;
+               //printf("Frame offste %d\n", tree->offset);
                    //space for other info
                
                //st.print(pointerPrintStr);            

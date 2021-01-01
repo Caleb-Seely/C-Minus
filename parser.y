@@ -10,6 +10,7 @@
 #include "semantic.h"
 #include "printtree.h"
 #include "IO.h"
+#include "codeGen.h"
 #include "yyerror.h"
 
 #define YYERROR_VERBOSE
@@ -18,11 +19,12 @@ extern int yylineno;
 extern FILE *yyin;
 static char *savedName;
 static int savedLinenno;
-static TreeNode *syntaxTree;
+static TreeNode *syntaxTree, *TreeTwo;
 extern bool bug;
 bool cdbug, PAST, STATIC_FLAG, PMEM;
 int numErrs, numWarns, Loffset, Goffset, SYNTAXERR;
 SymbolTable st;
+FILE *code;
 
 
 %}
@@ -1186,6 +1188,7 @@ constant : NUMCONST
             $$->attr.op = $1->Token_Class;
             $$->type = Char;
             $$->isInit = true;
+            $$->attr.cvalue = $1->Token_Str[1];
          }
 
          | STRINGCONST  
@@ -1228,20 +1231,13 @@ int main(int argc, char **argv){
    int c = 0;
    numErrs = 0, numWarns = 0, Loffset = 0, Goffset = 0, SYNTAXERR = false;
    bool printSyntaxTree = 0;
+   TreeNode *mainNode;
+   char *filename ;
+   TreeTwo = syntaxTree;
    
-   TreeNode *tmp;
-
    
 
-   // s.insert("dog", (char *)"WOOF");
-   // printf("%s\n", (char *)(s.lookup("dog")));
-   // 
-   // //st.print(pointerPrintStr);
-   // st.insert("charlie", (char *)"cow");
-   //  st.enter((std::string )"Second");
-   //  st.insert("delta", (char *)"dog");
-   //  st.insertGlobal("echo", (char *)"elk");
-   //  st.print(pointerPrintStr);
+
 
       // hunt for a string of options
       while ((c = getopt(argc, argv, "bcdpP")) != -1) {
@@ -1272,10 +1268,14 @@ int main(int argc, char **argv){
             }
       }
 
-      
 
    if(argc > 1){
-      if((yyin = fopen(argv[argc-1], "r"))){
+      filename = strdup(argv[1]);
+      //printf("Changing name\n");
+      filename[strlen(filename)-2] = 116; //t
+      filename[strlen(filename)-1] = 109; //m
+
+      if((yyin = fopen(argv[argc-1], "r"))){    //not sure if this actually works argc -1 is wack 
          //redirects input
       }
       else{
@@ -1283,7 +1283,18 @@ int main(int argc, char **argv){
          
       }
    }
+
+   code = fopen(filename, "w");     //open tm file
+
+   if(code == NULL){
+      printf("Error opening %s\n",filename);
+   }
+   else{
+      //printf("%s sucesfully opened \n", filename);
+   }
+      
    
+   //fprintf(code, )
    initErrorProcessing();
    yyparse();     //tokenize the entire file
 
@@ -1294,8 +1305,8 @@ int main(int argc, char **argv){
       analyze(syntaxTree);   //syntax anlysis  
       st.applyToAll(wasUsed); //check globals
 
-      tmp = st.lookupNode((char *)"main");
-      if(tmp != NULL && tmp->nodekind == DeclK && tmp->kind.decl != FuncK || tmp == NULL){      //if its not a function or not found at all
+      mainNode = st.lookupNode((char *)"main");
+      if(mainNode != NULL && mainNode->nodekind == DeclK && mainNode->kind.decl != FuncK || mainNode == NULL){      //if its not a function or not found at all
          printf("ERROR(LINKER): Procedure main is not declared.\n");
          numErrs++;      
       }
@@ -1314,5 +1325,12 @@ int main(int argc, char **argv){
    printf("Offset for end of global space: %d\n", Goffset);
    printf("Number of warnings: %d\n",numWarns );
    printf("Number of errors: %d\n",numErrs);
+   //st.print(pointerPrintStr);
+   
+   IOSetup(syntaxTree);
+   //treeCode(syntaxTree);
+   init();
+   
+   fclose(code);     //close tm file
 
 }
