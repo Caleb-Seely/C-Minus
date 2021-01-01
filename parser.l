@@ -9,14 +9,14 @@
    #include <stdlib.h>
    #include <ctype.h> 
    #include <stdio.h> 
-   #include "tree.h"
+   #include "printtree.h"
   // #include "ScanType.h"
    #include "parser.tab.h" 
    bool pdbug = false;
 
    static int Set_Value(int LINE_NUMBER, int Token_Class, char *String_Value){
 
-      yylval.Token_Data =  malloc(sizeof(yylval.Token_Data));
+      yylval.Token_Data =  new TokenData;
       yylval.Token_Data -> Token_Class = Token_Class;
 
       yylval.Token_Data -> Token_Str = strdup(String_Value);
@@ -66,7 +66,8 @@
          }
 
          case CHARCONST:{
-            char *tmp = '\0';
+
+            //char *tmp = '\0';
             //printf("Token_Str  |%d|\n", String_Value[0]);
             if(String_Value[0] == 34){ // "STRING"
               // printf("ONE = 34\n");
@@ -179,8 +180,8 @@ false                      return Set_Value(LINE_NUMBER, FALSE, yytext);
 \.\.           return Set_Value(LINE_NUMBER, RANGE, yytext);
 
 
-[\']\\0[']    return Set_Value(LINE_NUMBER, CHARCONST, "' \0 ");
-[\']\\n[']    return Set_Value(LINE_NUMBER, CHARCONST, "'\n'");
+[\']\\0[']    return Set_Value(LINE_NUMBER, CHARCONST, (char *)"'\0'" );
+[\']\\n[']    return Set_Value(LINE_NUMBER, CHARCONST, (char*) "'\n'");
 [\'][\\].[\']   return Set_Value(LINE_NUMBER, CHARCONST, &yytext[2]);       //printf("_______________________CHAR CONST WAS FOUND IT WAS %s|\n", yytext);
 
 " "  ; //White space

@@ -99,7 +99,9 @@ extern int yydebug;
     INT = 309,
     BOOL = 310,
     CHAR = 311,
-    STATIC = 312
+    STATIC = 312,
+    unary_MUL = 313,
+    unary_MIN = 314
   };
 #endif
 
@@ -108,13 +110,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 27 "parser.y" /* yacc.c:1909  */
+#line 32 "parser.y" /* yacc.c:1909  */
 
     TokenData *Token_Data;
     TreeNode *Tree;
     ExpType type;
 
-#line 118 "parser.tab.h" /* yacc.c:1909  */
+#line 120 "parser.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
