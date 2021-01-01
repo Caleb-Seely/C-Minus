@@ -2,13 +2,13 @@ Bin  = c-
 CC = g++
 CFLAGS = -g 
 
-SRCS = parser.y parser.l printtree.c symbolTable.cpp semantic.c
+SRCS = parser.y parser.l printtree.c symbolTable.cpp semantic.c IO.c errors.c
 DEPS = lex.yy.c parser.tab.c parser.tab.h makefile
-HDRS = printtree.h ScanType.h symbolTable.h semantic.h
+HDRS = printtree.h ScanType.h symbolTable.h semantic.h IO.h
 OBJS = parser.tab.o lex.yy.o
 
-c-: $(SRCS) $(DEPS)
-	g++ parser.tab.c lex.yy.c printtree.c symbolTable.cpp semantic.c -g -o c- 
+c-: $(SRCS) $(DEPS) $(HDRS)
+	g++ parser.tab.c lex.yy.c printtree.c symbolTable.cpp semantic.c IO.c errors.c -g -o c- 
 
 parser.tab.c parser.tab.h: parser.y
 	bison -v -t -d parser.y --debug --verbose 
@@ -25,71 +25,45 @@ clean:
 
 tests: 
 
-	./c- nano.c-
-	echo -e '1 | 0\n'
 	./c- small.c-
-	echo -e '4 | 5\n'
-	./c- whileif.c-
-	echo -e '2 | 1\n'
-	./c- tinyscope.c-
-	echo -e '1 | 0\n'
-	./c- callerr.c-
-	echo -e '0 | 3\n'
-	./c- elsif.c-
-	echo -e '0 | 0\n'
-	./c- precassoc.c-
-	echo -e '0 | 0\n'
-	./c- minus.c-
-	echo -e '0 | 0\n'
+	echo -e '5 | 4\n'
+	./c- tiny.c-
+	echo -e '4 | 7\n'
+	./c- call.c-
+	echo -e '4 | 0\n'
+	./c- loopscope.c-
+	echo -e '0 | 2\n'
+	./c- matchunmatch.c-
+	echo -e '6 | 8\n'
+	./c- nano.c-
+	echo -e '1 | 1\n'
+	./c- nano.c-
+	echo -e '3 | 30\n'
+	./c- nano.c-
+	echo -e '7 | 24\n'
 	./c- exp.c-
 	echo -e '8 | 10\n'
-	./c- uninitialized.c-
-	echo -e '5 | 0'
-	./c- matchunmatch.c-
-	echo -e '8 | 0'
-	./c- types.c-
-	echo -e '3 | 62\n'
-	./c- defused.c-
-	echo -e '6 | 11 \n'
-	./c- decllists.c-
-	echo -e '22 | 1\n'
-	./c- tiny.c-
-	echo -e '1 | 6\n'
-	./c- notused.c-
-	echo -e '4 | 4'
-	./c- optype.c-
-	echo -e '3 | 12'
-	./c- redefined.c-
-	echo -e '19 | 21\n'
-	./c- scope.c-
-	echo -e '4 | 25\n'
-	./c- loops.c-
-	echo -e '7 | 12\n'
-
+	./c- io.c-
+	echo -e '1 | 1\n'
+	./c- callerr.c-
+	echo -e '1 | 10\n'
 
 alls:
-	./c- array.c-
-	./c- tiny.c-
-	./c- arrays.c-
-	./c- nano.c-
-	./c- basicAll4.c-
 	./c- small.c-
-	./c- elsif.c-
-	./c- callerr.c-
-	./c- everythingS20.c-
-	./c- elsif.c-
+	./c- tiny.c-
+	./c- nano.c-
+	./c- call.c-
 	./c- loops.c-
-	./c- exp.c-
-	./c- whileif.c-
-	./c- defused.c-
-	./c- types.c-
-	./c- tinyType.c-
-	./c- uninitialized.c-
 	./c- matchunmatch.c-
-	./c- notused.c-
+	./c- param.c-
+	./c- undefined.c-
+	./c- tinyType.c-
+	./c- basicAll5.c-
+	./c- badcontrol.c-
+	./c- exp.c-
+	./c- array.c-
+	./c- io.c-
+	./c- callerr.c-
 	./c- optype.c-
-	./c- precassoc.c-
-	./c- redefined.c-
-	./c- scope.c-
-	./c- tinyscope.c-
+
 	

@@ -70,6 +70,8 @@
 #include <getopt.h>
 #include "semantic.h"
 #include "printtree.h"
+#include "IO.h"
+
 #define YYERROR_VERBOSE
 int yylex();
 extern int yylineno;
@@ -82,13 +84,14 @@ bool cdbug, PAST, STATIC_FLAG;
 int numErrs, numWarns;  
 SymbolTable st;
 
+
 void yyerror(const char *msg)
 {
       printf("ERROR(PARSER): %s\n LINE %d\nToken ", msg, yylineno );
 }
 
 
-#line 92 "parser.tab.c" /* yacc.c:339  */
+#line 95 "parser.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -188,13 +191,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 32 "parser.y" /* yacc.c:355  */
+#line 35 "parser.y" /* yacc.c:355  */
 
     TokenData *Token_Data;
     TreeNode *Tree;
     ExpType type;
 
-#line 198 "parser.tab.c" /* yacc.c:355  */
+#line 201 "parser.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -211,7 +214,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 215 "parser.tab.c" /* yacc.c:358  */
+#line 218 "parser.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -514,20 +517,20 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    65,    65,    72,    78,    85,    91,    98,   106,   119,
-     125,   132,   138,   146,   153,   168,   175,   182,   188,   193,
-     201,   211,   223,   229,   236,   242,   249,   257,   263,   270,
-     278,   290,   291,   292,   293,   294,   295,   296,   301,   307,
-     315,   325,   330,   337,   342,   349,   350,   351,   352,   368,
-     373,   378,   385,   390,   397,   408,   416,   422,   429,   436,
-     446,   453,   461,   468,   476,   486,   497,   505,   512,   526,
-     534,   541,   556,   566,   574,   589,   596,   606,   615,   625,
-     635,   645,   655,   665,   674,   683,   690,   700,   707,   717,
-     726,   735,   742,   750,   757,   765,   773,   781,   789,   797,
-     806,   814,   821,   829,   838,   846,   853,   861,   869,   878,
-     885,   892,   901,   910,   920,   926,   933,   941,   953,   959,
-     964,   971,   981,   987,   994,  1000,  1007,  1016,  1027,  1035,
-    1045
+       0,    68,    68,    75,    81,    88,    94,   101,   109,   122,
+     128,   135,   141,   149,   156,   171,   178,   185,   191,   196,
+     204,   214,   226,   232,   239,   245,   252,   260,   266,   273,
+     281,   293,   294,   295,   296,   297,   298,   299,   304,   310,
+     318,   328,   333,   340,   345,   352,   353,   354,   355,   371,
+     376,   381,   388,   393,   400,   411,   419,   425,   432,   439,
+     449,   456,   464,   471,   479,   491,   502,   510,   517,   531,
+     539,   546,   561,   571,   579,   594,   601,   611,   620,   630,
+     640,   650,   660,   670,   679,   688,   695,   705,   712,   722,
+     731,   740,   747,   755,   762,   770,   778,   786,   794,   802,
+     811,   819,   826,   834,   843,   851,   858,   866,   874,   883,
+     890,   897,   906,   915,   925,   931,   938,   946,   958,   964,
+     969,   976,   986,   992,   999,  1005,  1012,  1021,  1032,  1040,
+    1050
 };
 #endif
 
@@ -1478,63 +1481,63 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 66 "parser.y" /* yacc.c:1646  */
+#line 69 "parser.y" /* yacc.c:1646  */
     {
                   (yyval.Tree)=(yyvsp[0].Tree);
                   syntaxTree = (yyval.Tree);
                   if(cdbug) printf("<-program\n");
                }
-#line 1488 "parser.tab.c" /* yacc.c:1646  */
+#line 1491 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 73 "parser.y" /* yacc.c:1646  */
+#line 76 "parser.y" /* yacc.c:1646  */
     {
                      if(cdbug) printf("<-declarationList declaration\n");
                      (yyval.Tree) = addSibling((yyvsp[-1].Tree),(yyvsp[0].Tree));
                   }
-#line 1497 "parser.tab.c" /* yacc.c:1646  */
+#line 1500 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 79 "parser.y" /* yacc.c:1646  */
+#line 82 "parser.y" /* yacc.c:1646  */
     {
                      if(cdbug) printf("<-declarationList declaration\n");
                      (yyval.Tree) = (yyvsp[0].Tree);
                   }
-#line 1506 "parser.tab.c" /* yacc.c:1646  */
+#line 1509 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 86 "parser.y" /* yacc.c:1646  */
+#line 89 "parser.y" /* yacc.c:1646  */
     {
                      if(cdbug) printf("<-declaration varDeclaration\n");
                      (yyval.Tree) = (yyvsp[0].Tree);
                   }
-#line 1515 "parser.tab.c" /* yacc.c:1646  */
+#line 1518 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 92 "parser.y" /* yacc.c:1646  */
+#line 95 "parser.y" /* yacc.c:1646  */
     {
                      if(cdbug) printf("<-declaration funDeclaration\n");
                      (yyval.Tree)=(yyvsp[0].Tree);
                   }
-#line 1524 "parser.tab.c" /* yacc.c:1646  */
+#line 1527 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 99 "parser.y" /* yacc.c:1646  */
+#line 102 "parser.y" /* yacc.c:1646  */
     {
                         if(cdbug) printf("<-varDeclaration typeSpecifier varDeclList SEMI\n");
                         (yyval.Tree) = (yyvsp[-1].Tree);
                         typeToSibs((yyval.Tree), (yyvsp[-2].Tree)->type);
                      }
-#line 1534 "parser.tab.c" /* yacc.c:1646  */
+#line 1537 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 107 "parser.y" /* yacc.c:1646  */
+#line 110 "parser.y" /* yacc.c:1646  */
     {
                         if(cdbug) printf("<-scopedVarDeclaration scopedTypeSpecifier varDeclList\n");
                         (yyval.Tree) = (yyvsp[-1].Tree);
@@ -1545,58 +1548,58 @@ yyreduce:
                         }
                         typeToSibs((yyval.Tree), (yyvsp[-2].Tree)->type);
                      }
-#line 1549 "parser.tab.c" /* yacc.c:1646  */
+#line 1552 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 120 "parser.y" /* yacc.c:1646  */
+#line 123 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-varDeclList varDeclList COM varDeclInitialize ADD SIBLINGS 6\n");
                (yyval.Tree) = addSibling((yyvsp[-2].Tree),(yyvsp[0].Tree));
             }
-#line 1558 "parser.tab.c" /* yacc.c:1646  */
+#line 1561 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 126 "parser.y" /* yacc.c:1646  */
+#line 129 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-varDeclList varDeclInitialize\n");
                (yyval.Tree) = (yyvsp[0].Tree);
             }
-#line 1567 "parser.tab.c" /* yacc.c:1646  */
+#line 1570 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 133 "parser.y" /* yacc.c:1646  */
+#line 136 "parser.y" /* yacc.c:1646  */
     {
                      if(cdbug) printf("<-varDeclInitialize varDeclId\n");
                      (yyval.Tree) = (yyvsp[0].Tree);
                   }
-#line 1576 "parser.tab.c" /* yacc.c:1646  */
+#line 1579 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 139 "parser.y" /* yacc.c:1646  */
+#line 142 "parser.y" /* yacc.c:1646  */
     {
                      if(cdbug) printf("<-varDeclInitialize varDeclId COL simpleExpression \n");
                      (yyval.Tree)=(yyvsp[-2].Tree);
                      (yyval.Tree)->child[0] = (yyvsp[0].Tree);
                   }
-#line 1586 "parser.tab.c" /* yacc.c:1646  */
+#line 1589 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 147 "parser.y" /* yacc.c:1646  */
+#line 150 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-varDeclId ID\n");
                (yyval.Tree) = newDecNode(VarK, (yyvsp[0].Token_Data)->Line_Num);
                (yyval.Tree)->attr.name = strdup((yyvsp[0].Token_Data)->Token_Str);
             }
-#line 1596 "parser.tab.c" /* yacc.c:1646  */
+#line 1599 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 154 "parser.y" /* yacc.c:1646  */
+#line 157 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-varDeclId ID LIndex NUMCONST RIndex \n");  //array define
                (yyval.Tree) = newDecNode(VarK, (yyvsp[-3].Token_Data)->Line_Num);
@@ -1607,57 +1610,57 @@ yyreduce:
                (yyval.Tree)->attr.op = (yyvsp[-2].Token_Data)->Token_Class;
                (yyval.Tree)->type = UndefinedType;
           }
-#line 1611 "parser.tab.c" /* yacc.c:1646  */
+#line 1614 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 169 "parser.y" /* yacc.c:1646  */
+#line 172 "parser.y" /* yacc.c:1646  */
     {
                         if(cdbug) printf("<-scopedTypeSpecifier STATIC typeSpecifier \n");
                         (yyval.Tree) = (yyvsp[0].Tree);
                         STATIC_FLAG = true;
                      }
-#line 1621 "parser.tab.c" /* yacc.c:1646  */
+#line 1624 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 176 "parser.y" /* yacc.c:1646  */
+#line 179 "parser.y" /* yacc.c:1646  */
     {
                        if(cdbug) printf("<-scopedTypeSpecifier typeSpecifier\n");
                         (yyval.Tree) = (yyvsp[0].Tree);
                     }
-#line 1630 "parser.tab.c" /* yacc.c:1646  */
+#line 1633 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 183 "parser.y" /* yacc.c:1646  */
+#line 186 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-typeSpecifier INT \n");
                   (yyval.Tree)->type =  Integer;             
                }
-#line 1639 "parser.tab.c" /* yacc.c:1646  */
+#line 1642 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 189 "parser.y" /* yacc.c:1646  */
+#line 192 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-typeSpecifier BOOL\n");
                   (yyval.Tree)->type = Bool;
                }
-#line 1648 "parser.tab.c" /* yacc.c:1646  */
+#line 1651 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 194 "parser.y" /* yacc.c:1646  */
+#line 197 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-typeSpecifier CHAR\n");
                   (yyval.Tree)->type = Char;
                }
-#line 1657 "parser.tab.c" /* yacc.c:1646  */
+#line 1660 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 202 "parser.y" /* yacc.c:1646  */
+#line 205 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-funDeclaration typeSpecifier ID LP params RP statement  \n");
                   (yyval.Tree) = newDecNode(FuncK, (yyvsp[-4].Token_Data)->Line_Num); 
@@ -1666,11 +1669,11 @@ yyreduce:
                   (yyval.Tree)->child[0] = (yyvsp[-2].Tree);
                   (yyval.Tree)->child[1] = (yyvsp[0].Tree);
                }
-#line 1670 "parser.tab.c" /* yacc.c:1646  */
+#line 1673 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 212 "parser.y" /* yacc.c:1646  */
+#line 215 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-funDeclaration ID LP params RP statement  \n");
                   (yyval.Tree) = newDecNode(FuncK, (yyvsp[-4].Token_Data)->Line_Num); 
@@ -1680,86 +1683,86 @@ yyreduce:
                   (yyval.Tree)->child[0] = (yyvsp[-2].Tree);
                   (yyval.Tree)->child[1] = (yyvsp[0].Tree);
                }
-#line 1684 "parser.tab.c" /* yacc.c:1646  */
+#line 1687 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 224 "parser.y" /* yacc.c:1646  */
+#line 227 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-params paramList\n");
             (yyval.Tree)=(yyvsp[0].Tree);
          }
-#line 1693 "parser.tab.c" /* yacc.c:1646  */
+#line 1696 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 230 "parser.y" /* yacc.c:1646  */
+#line 233 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-params empty\n");
             (yyval.Tree) = NULL;
          }
-#line 1702 "parser.tab.c" /* yacc.c:1646  */
+#line 1705 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 237 "parser.y" /* yacc.c:1646  */
+#line 240 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-paramList paramList SEMI paramTypeList ADD SIBLINGS 13\n");
                (yyval.Tree) = addSibling((yyvsp[-2].Tree),(yyvsp[0].Tree));
             }
-#line 1711 "parser.tab.c" /* yacc.c:1646  */
+#line 1714 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 243 "parser.y" /* yacc.c:1646  */
+#line 246 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-paramList paramTypeList\n");
                (yyval.Tree)=(yyvsp[0].Tree);
             }
-#line 1720 "parser.tab.c" /* yacc.c:1646  */
+#line 1723 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 250 "parser.y" /* yacc.c:1646  */
+#line 253 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-paramTypeList typeSpecifier paramIdList\n");
                   (yyval.Tree) = (yyvsp[0].Tree);
                   typeToSibs((yyval.Tree), (yyvsp[-1].Tree)->type);      
                }
-#line 1730 "parser.tab.c" /* yacc.c:1646  */
+#line 1733 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 258 "parser.y" /* yacc.c:1646  */
+#line 261 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-declarationList paramIdList COM paramId ADD SIBLINGS 15\n");
                (yyval.Tree) = addSibling((yyvsp[-2].Tree),(yyvsp[0].Tree));
             }
-#line 1739 "parser.tab.c" /* yacc.c:1646  */
+#line 1742 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 264 "parser.y" /* yacc.c:1646  */
+#line 267 "parser.y" /* yacc.c:1646  */
     {  
                if(cdbug) printf("<-paramIdList paramId\n");
                (yyval.Tree)=(yyvsp[0].Tree);
             }
-#line 1748 "parser.tab.c" /* yacc.c:1646  */
+#line 1751 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 271 "parser.y" /* yacc.c:1646  */
+#line 274 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-paramId ID\n");
             (yyval.Tree) = newDecNode(ParamK, (yyvsp[0].Token_Data)->Line_Num); 
             (yyval.Tree)->attr.name = strdup((yyvsp[0].Token_Data)->Token_Str); 
             (yyval.Tree)->isInit = true;
          }
-#line 1759 "parser.tab.c" /* yacc.c:1646  */
+#line 1762 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 279 "parser.y" /* yacc.c:1646  */
+#line 282 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-paramId ID LIndex RIndex\n");
             (yyval.Tree) = newDecNode(ParamK, (yyvsp[-2].Token_Data)->Line_Num);
@@ -1768,71 +1771,71 @@ yyreduce:
             (yyval.Tree)->isInit = true;
             (yyval.Tree)->type = UndefinedType;
          }
-#line 1772 "parser.tab.c" /* yacc.c:1646  */
+#line 1775 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 290 "parser.y" /* yacc.c:1646  */
+#line 293 "parser.y" /* yacc.c:1646  */
     {(yyval.Tree)=(yyvsp[0].Tree); if(cdbug) printf("<-statementexpressionStmt\n");}
-#line 1778 "parser.tab.c" /* yacc.c:1646  */
+#line 1781 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 291 "parser.y" /* yacc.c:1646  */
+#line 294 "parser.y" /* yacc.c:1646  */
     {(yyval.Tree)=(yyvsp[0].Tree); if(cdbug) printf("<-statement compoundStmt\n");}
-#line 1784 "parser.tab.c" /* yacc.c:1646  */
+#line 1787 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 292 "parser.y" /* yacc.c:1646  */
+#line 295 "parser.y" /* yacc.c:1646  */
     {(yyval.Tree) = (yyvsp[0].Tree); if(cdbug) printf("<-statement matchedIf : %d\n", (yyvsp[0].Tree)->attr.value);}
-#line 1790 "parser.tab.c" /* yacc.c:1646  */
+#line 1793 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 293 "parser.y" /* yacc.c:1646  */
+#line 296 "parser.y" /* yacc.c:1646  */
     {(yyval.Tree) = (yyvsp[0].Tree); if(cdbug) printf("<-statement unmatchedIf\n");}
-#line 1796 "parser.tab.c" /* yacc.c:1646  */
+#line 1799 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 294 "parser.y" /* yacc.c:1646  */
+#line 297 "parser.y" /* yacc.c:1646  */
     {(yyval.Tree)=(yyvsp[0].Tree); if(cdbug) printf("<-statement iterationStmt\n");}
-#line 1802 "parser.tab.c" /* yacc.c:1646  */
+#line 1805 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 295 "parser.y" /* yacc.c:1646  */
+#line 298 "parser.y" /* yacc.c:1646  */
     {(yyval.Tree)=(yyvsp[0].Tree); if(cdbug) printf("<-statement returnStmt\n");}
-#line 1808 "parser.tab.c" /* yacc.c:1646  */
+#line 1811 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 296 "parser.y" /* yacc.c:1646  */
+#line 299 "parser.y" /* yacc.c:1646  */
     {(yyval.Tree)=(yyvsp[0].Tree); if(cdbug) printf("<-statement breakStmt\n");}
-#line 1814 "parser.tab.c" /* yacc.c:1646  */
+#line 1817 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 302 "parser.y" /* yacc.c:1646  */
+#line 305 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-expressionStmt expression SEMI\n");
                   (yyval.Tree)=(yyvsp[-1].Tree);
                }
-#line 1823 "parser.tab.c" /* yacc.c:1646  */
+#line 1826 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 308 "parser.y" /* yacc.c:1646  */
+#line 311 "parser.y" /* yacc.c:1646  */
     {
                      if(cdbug) printf("<-expressionStmt SEMI\n");
                      (yyval.Tree)=NULL;
                   }
-#line 1832 "parser.tab.c" /* yacc.c:1646  */
+#line 1835 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 316 "parser.y" /* yacc.c:1646  */
+#line 319 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-compoundStmt LB localDeclarations statementList RB\n");
                   (yyval.Tree) = newStmtNode(CompoundK, (yyvsp[-3].Token_Data)->Line_Num);
@@ -1840,116 +1843,116 @@ yyreduce:
                   (yyval.Tree)->child[0] = (yyvsp[-2].Tree);
                   (yyval.Tree)->child[1] = (yyvsp[-1].Tree);
                }
-#line 1844 "parser.tab.c" /* yacc.c:1646  */
+#line 1847 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 326 "parser.y" /* yacc.c:1646  */
+#line 329 "parser.y" /* yacc.c:1646  */
     {
                      if(cdbug) printf("<-localDeclarations localDeclarations scopedVarDeclaration\n");
                      (yyval.Tree) = addSibling((yyvsp[-1].Tree),(yyvsp[0].Tree));
                   }
-#line 1853 "parser.tab.c" /* yacc.c:1646  */
+#line 1856 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 331 "parser.y" /* yacc.c:1646  */
+#line 334 "parser.y" /* yacc.c:1646  */
     {
                      if(cdbug) printf("<-localDeclarations empty\n");
                      (yyval.Tree)=NULL;
                   }
-#line 1862 "parser.tab.c" /* yacc.c:1646  */
+#line 1865 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 338 "parser.y" /* yacc.c:1646  */
+#line 341 "parser.y" /* yacc.c:1646  */
     {
                  if(cdbug) printf("<-statementList statementList statement ADD SIBLINGS 21\n");
                  (yyval.Tree) = addSibling((yyvsp[-1].Tree),(yyvsp[0].Tree));
               }
-#line 1871 "parser.tab.c" /* yacc.c:1646  */
+#line 1874 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 343 "parser.y" /* yacc.c:1646  */
+#line 346 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-statementList empty\n");
                   (yyval.Tree)=NULL;
                }
-#line 1880 "parser.tab.c" /* yacc.c:1646  */
+#line 1883 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 349 "parser.y" /* yacc.c:1646  */
+#line 352 "parser.y" /* yacc.c:1646  */
     {(yyval.Tree)=(yyvsp[0].Tree); if(cdbug) printf("<-partialStmt expressionStmt\n");}
-#line 1886 "parser.tab.c" /* yacc.c:1646  */
+#line 1889 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 350 "parser.y" /* yacc.c:1646  */
+#line 353 "parser.y" /* yacc.c:1646  */
     {(yyval.Tree)=(yyvsp[0].Tree); if(cdbug) printf("<-partialStmt compoundStmt\n");}
-#line 1892 "parser.tab.c" /* yacc.c:1646  */
+#line 1895 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 351 "parser.y" /* yacc.c:1646  */
+#line 354 "parser.y" /* yacc.c:1646  */
     {(yyval.Tree)=(yyvsp[0].Tree); if(cdbug) printf("<-partialStmt returnStmt\n");}
-#line 1898 "parser.tab.c" /* yacc.c:1646  */
+#line 1901 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 352 "parser.y" /* yacc.c:1646  */
+#line 355 "parser.y" /* yacc.c:1646  */
     {(yyval.Tree)=(yyvsp[0].Tree); if(cdbug) printf("<-partialStmt breakStmt\n");}
-#line 1904 "parser.tab.c" /* yacc.c:1646  */
+#line 1907 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 369 "parser.y" /* yacc.c:1646  */
+#line 372 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-matched matchedIf \n");
             (yyval.Tree)=(yyvsp[0].Tree);
          }
-#line 1913 "parser.tab.c" /* yacc.c:1646  */
+#line 1916 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 374 "parser.y" /* yacc.c:1646  */
+#line 377 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-matched matchedWhile \n");
             (yyval.Tree)=(yyvsp[0].Tree);
          }
-#line 1922 "parser.tab.c" /* yacc.c:1646  */
+#line 1925 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 379 "parser.y" /* yacc.c:1646  */
+#line 382 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-matched partialStmt \n");
             (yyval.Tree)=(yyvsp[0].Tree);
          }
-#line 1931 "parser.tab.c" /* yacc.c:1646  */
+#line 1934 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 386 "parser.y" /* yacc.c:1646  */
+#line 389 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-unmatched unmatchedIf \n");
                (yyval.Tree)=(yyvsp[0].Tree);
             }
-#line 1940 "parser.tab.c" /* yacc.c:1646  */
+#line 1943 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 391 "parser.y" /* yacc.c:1646  */
+#line 394 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-unmatched unmatchedWhile \n");
                (yyval.Tree)=(yyvsp[0].Tree);
             }
-#line 1949 "parser.tab.c" /* yacc.c:1646  */
+#line 1952 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 398 "parser.y" /* yacc.c:1646  */
+#line 401 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-matchedIf IF simpleExpression THEN matched matchedElse : %d\n", (yyvsp[0].Tree)->attr.value);
                (yyval.Tree) = newStmtNode(IfK, (yyvsp[-4].Token_Data)->Line_Num); 
@@ -1958,11 +1961,11 @@ yyreduce:
                (yyval.Tree)->child[2] = (yyvsp[0].Tree);
                
             }
-#line 1962 "parser.tab.c" /* yacc.c:1646  */
+#line 1965 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 409 "parser.y" /* yacc.c:1646  */
+#line 412 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-matchedElse ELSIF simpleExpression THEN matched matchedElse\n");
                (yyval.Tree) = newStmtNode(ElsifK, (yyvsp[-4].Token_Data)->Line_Num); 
@@ -1970,42 +1973,42 @@ yyreduce:
                (yyval.Tree)->child[1] = (yyvsp[-1].Tree);
                (yyval.Tree)->child[2] = (yyvsp[0].Tree);
             }
-#line 1974 "parser.tab.c" /* yacc.c:1646  */
+#line 1977 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 417 "parser.y" /* yacc.c:1646  */
+#line 420 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-matchedElse ELSE matched : %d\n", (yyvsp[0].Tree)->attr.value);
                (yyval.Tree)=(yyvsp[0].Tree);
             }
-#line 1983 "parser.tab.c" /* yacc.c:1646  */
+#line 1986 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 423 "parser.y" /* yacc.c:1646  */
+#line 426 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-unmatchedIf IF simpleExpression THEN matched \n");
                   (yyval.Tree) = newStmtNode(IfK, (yyvsp[-3].Token_Data)->Line_Num); 
                   (yyval.Tree)->child[0] = (yyvsp[-2].Tree);
                   (yyval.Tree)->child[1] = (yyvsp[0].Tree);
             }
-#line 1994 "parser.tab.c" /* yacc.c:1646  */
+#line 1997 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 430 "parser.y" /* yacc.c:1646  */
+#line 433 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-unmatchedIf IF simpleExpression THEN unmatched \n");
                   (yyval.Tree) = newStmtNode(IfK, (yyvsp[-3].Token_Data)->Line_Num); 
                   (yyval.Tree)->child[0] = (yyvsp[-2].Tree);
                   (yyval.Tree)->child[1] = (yyvsp[0].Tree);
             }
-#line 2005 "parser.tab.c" /* yacc.c:1646  */
+#line 2008 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 437 "parser.y" /* yacc.c:1646  */
+#line 440 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-unmatchedIf IF simpleExpression THEN matched unmatchedElse \n");
                   (yyval.Tree) = newStmtNode(IfK, (yyvsp[-4].Token_Data)->Line_Num); 
@@ -2014,22 +2017,22 @@ yyreduce:
                   (yyval.Tree)->child[2] = (yyvsp[0].Tree);
                  // $$ = addSibling($2,$5);
             }
-#line 2018 "parser.tab.c" /* yacc.c:1646  */
+#line 2021 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 447 "parser.y" /* yacc.c:1646  */
+#line 450 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-unmatchedElse ELSIF simpleExpression THEN matched \n");
                   (yyval.Tree) = newStmtNode(ElsifK, (yyvsp[-3].Token_Data)->Line_Num); 
                   (yyval.Tree)->child[0] = (yyvsp[-2].Tree);
                   (yyval.Tree)->child[1] = (yyvsp[0].Tree);
                }
-#line 2029 "parser.tab.c" /* yacc.c:1646  */
+#line 2032 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 454 "parser.y" /* yacc.c:1646  */
+#line 457 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-unmatchedElse ELSIF simpleExpression THEN matched unmatchedElse \n");
                   (yyval.Tree) = newStmtNode(ElsifK, (yyvsp[-4].Token_Data)->Line_Num); 
@@ -2037,31 +2040,31 @@ yyreduce:
                   (yyval.Tree)->child[1] = (yyvsp[-1].Tree);
                   (yyval.Tree)->child[2] = (yyvsp[0].Tree);
                }
-#line 2041 "parser.tab.c" /* yacc.c:1646  */
+#line 2044 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 62:
-#line 462 "parser.y" /* yacc.c:1646  */
+#line 465 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-unmatchedElse ELSIF simpleExpression THEN unmatched \n");
                   (yyval.Tree) = newStmtNode(ElsifK, (yyvsp[-3].Token_Data)->Line_Num); 
                   (yyval.Tree)->child[0] = (yyvsp[-2].Tree);
                   (yyval.Tree)->child[1] = (yyvsp[0].Tree);
                }
-#line 2052 "parser.tab.c" /* yacc.c:1646  */
+#line 2055 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 63:
-#line 469 "parser.y" /* yacc.c:1646  */
+#line 472 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-unmatchedElse ELSE unmatched \n");
                   (yyval.Tree) = (yyvsp[0].Tree);
                }
-#line 2061 "parser.tab.c" /* yacc.c:1646  */
+#line 2064 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 64:
-#line 477 "parser.y" /* yacc.c:1646  */
+#line 480 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-iterationRange ID EQ simpleExpression RANGE simpleExpression \n");
                   (yyval.Tree) = newStmtNode(RangeK, (yyvsp[-3].Token_Data)->Line_Num);      
@@ -2069,12 +2072,14 @@ yyreduce:
                   (yyval.Tree)->child[1] = (yyvsp[0].Tree);
                   (yyval.Tree)->child[2] = newExpNode(ConstantK, (yyvsp[-3].Token_Data)->Line_Num);
                   (yyval.Tree)->child[2]-> attr.value = 1;
+                  (yyval.Tree)->child[2]->type = Integer;
+
                }
-#line 2074 "parser.tab.c" /* yacc.c:1646  */
+#line 2079 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 487 "parser.y" /* yacc.c:1646  */
+#line 492 "parser.y" /* yacc.c:1646  */
     {  
                   if(cdbug) printf("<-iterationRange ID EQ simpleExpression RANGE simpleExpression COL simpleExpression\n");
                   (yyval.Tree) = newStmtNode(RangeK, (yyvsp[-5].Token_Data)->Line_Num); 
@@ -2083,11 +2088,11 @@ yyreduce:
                   (yyval.Tree)->child[1] = (yyvsp[-2].Tree);
                   (yyval.Tree)->child[2] = (yyvsp[0].Tree);
                }
-#line 2087 "parser.tab.c" /* yacc.c:1646  */
+#line 2092 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 498 "parser.y" /* yacc.c:1646  */
+#line 503 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-unmatchedWhile WHILE simpleExpression DO unmatched\n");
                   (yyval.Tree) = newStmtNode(WhileK, (yyvsp[-3].Token_Data)->Line_Num);
@@ -2095,22 +2100,22 @@ yyreduce:
                   (yyval.Tree)->child[0]=(yyvsp[-2].Tree);
                   (yyval.Tree)->child[1] = (yyvsp[0].Tree);
                }
-#line 2099 "parser.tab.c" /* yacc.c:1646  */
+#line 2104 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 506 "parser.y" /* yacc.c:1646  */
+#line 511 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-unmatchedWhile LOOP FOREVER unmatched\n");
                   (yyval.Tree) = newStmtNode(LoopForeverK, (yyvsp[-2].Token_Data)->Line_Num); 
                   (yyval.Tree)->attr.op = (yyvsp[-2].Token_Data)->Token_Class;
                   (yyval.Tree)->child[1]=(yyvsp[0].Tree); 
                }
-#line 2110 "parser.tab.c" /* yacc.c:1646  */
+#line 2115 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 68:
-#line 513 "parser.y" /* yacc.c:1646  */
+#line 518 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-unmatchedWhile LOOP iterationRange DO unmatched\n");
                   (yyval.Tree) = newStmtNode(LoopK, (yyvsp[-4].Token_Data)->Line_Num);
@@ -2122,11 +2127,11 @@ yyreduce:
                   (yyval.Tree)->child[1] = (yyvsp[-2].Tree);
                   (yyval.Tree)->child[2] = (yyvsp[0].Tree); 
                }
-#line 2126 "parser.tab.c" /* yacc.c:1646  */
+#line 2131 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 527 "parser.y" /* yacc.c:1646  */
+#line 532 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-unmatchedWhile WHILE simpleExpression DO unmatched\n");
                   (yyval.Tree) = newStmtNode(WhileK, (yyvsp[-3].Token_Data)->Line_Num);
@@ -2134,22 +2139,22 @@ yyreduce:
                   (yyval.Tree)->child[0]=(yyvsp[-2].Tree);
                   (yyval.Tree)->child[1] = (yyvsp[0].Tree);
                }
-#line 2138 "parser.tab.c" /* yacc.c:1646  */
+#line 2143 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 535 "parser.y" /* yacc.c:1646  */
+#line 540 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-unmatchedWhile LOOP FOREVER unmatched\n");
                   (yyval.Tree) = newStmtNode(LoopForeverK, (yyvsp[-2].Token_Data)->Line_Num); 
                   (yyval.Tree)->attr.op = (yyvsp[-2].Token_Data)->Token_Class;
                   (yyval.Tree)->child[1]=(yyvsp[0].Tree); 
                }
-#line 2149 "parser.tab.c" /* yacc.c:1646  */
+#line 2154 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 542 "parser.y" /* yacc.c:1646  */
+#line 547 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-unmatchedWhile LOOP iterationRange DO unmatched\n");
                   (yyval.Tree) = newStmtNode(LoopK, (yyvsp[-4].Token_Data)->Line_Num);
@@ -2161,11 +2166,11 @@ yyreduce:
                   (yyval.Tree)->child[1] = (yyvsp[-2].Tree);
                   (yyval.Tree)->child[2] = (yyvsp[0].Tree);   
                }
-#line 2165 "parser.tab.c" /* yacc.c:1646  */
+#line 2170 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 557 "parser.y" /* yacc.c:1646  */
+#line 562 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-iterationStmt declaration\n");
                   (yyval.Tree) = newStmtNode(WhileK, (yyvsp[-3].Token_Data)->Line_Num);
@@ -2174,22 +2179,22 @@ yyreduce:
                   (yyval.Tree)->child[0] = (yyvsp[-2].Tree);
                   (yyval.Tree)->child[1] = (yyvsp[0].Tree);  
                }
-#line 2178 "parser.tab.c" /* yacc.c:1646  */
+#line 2183 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 567 "parser.y" /* yacc.c:1646  */
+#line 572 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-iterationStmt declaration\n");
                   (yyval.Tree) = newStmtNode(LoopForeverK, (yyvsp[-2].Token_Data)->Line_Num); 
                   (yyval.Tree)->attr.op = (yyvsp[-2].Token_Data)->Token_Class;
                   (yyval.Tree)->child[1] = (yyvsp[0].Tree); 
                }
-#line 2189 "parser.tab.c" /* yacc.c:1646  */
+#line 2194 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 575 "parser.y" /* yacc.c:1646  */
+#line 580 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-iterationStmt declaration\n");
                   (yyval.Tree) = newStmtNode(LoopK, (yyvsp[-4].Token_Data)->Line_Num);
@@ -2201,21 +2206,21 @@ yyreduce:
                   (yyval.Tree)->child[1] = (yyvsp[-2].Tree);
                   (yyval.Tree)->child[2] = (yyvsp[0].Tree);
                }
-#line 2205 "parser.tab.c" /* yacc.c:1646  */
+#line 2210 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 590 "parser.y" /* yacc.c:1646  */
+#line 595 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-returnStmt declaration\n");
                (yyval.Tree) = newStmtNode(ReturnK, (yyvsp[-1].Token_Data)->Line_Num);
                (yyval.Tree)->attr.op = (yyvsp[-1].Token_Data)->Token_Class;
             }
-#line 2215 "parser.tab.c" /* yacc.c:1646  */
+#line 2220 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 597 "parser.y" /* yacc.c:1646  */
+#line 602 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-returnStmt declaration\n");
                (yyval.Tree) = newStmtNode(ReturnK, (yyvsp[-2].Token_Data)->Line_Num); 
@@ -2223,21 +2228,21 @@ yyreduce:
                (yyval.Tree)->type = (yyvsp[-1].Tree)->type;
                (yyval.Tree)->child[0] = (yyvsp[-1].Tree);
             }
-#line 2227 "parser.tab.c" /* yacc.c:1646  */
+#line 2232 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 607 "parser.y" /* yacc.c:1646  */
+#line 612 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-breakStmt declaration\n");
                (yyval.Tree) = newStmtNode(BreakK, (yyvsp[-1].Token_Data)->Line_Num);
                (yyval.Tree)->attr.op = (yyvsp[-1].Token_Data)->Token_Class;
             }
-#line 2237 "parser.tab.c" /* yacc.c:1646  */
+#line 2242 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 616 "parser.y" /* yacc.c:1646  */
+#line 621 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-expression mutable EQ          expression\n");
                (yyval.Tree) = newExpNode(AssignK, (yyvsp[-1].Token_Data)->Line_Num); 
@@ -2246,11 +2251,11 @@ yyreduce:
                (yyval.Tree)->child[0]= (yyvsp[-2].Tree);
                (yyval.Tree)->child[1] = (yyvsp[0].Tree); 
             }
-#line 2250 "parser.tab.c" /* yacc.c:1646  */
+#line 2255 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 79:
-#line 626 "parser.y" /* yacc.c:1646  */
+#line 631 "parser.y" /* yacc.c:1646  */
     {
               if(cdbug) printf("<-expression mutable ADDASS expression\n");
               (yyval.Tree) = newExpNode(AssignK, (yyvsp[-1].Token_Data)->Line_Num); 
@@ -2259,11 +2264,11 @@ yyreduce:
               (yyval.Tree)->child[0]= (yyvsp[-2].Tree);
               (yyval.Tree)->child[1] = (yyvsp[0].Tree); 
             }
-#line 2263 "parser.tab.c" /* yacc.c:1646  */
+#line 2268 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 80:
-#line 636 "parser.y" /* yacc.c:1646  */
+#line 641 "parser.y" /* yacc.c:1646  */
     {
               if(cdbug) printf("<-expression mutable SUBASS expression\n");
               (yyval.Tree) = newExpNode(AssignK, (yyvsp[-1].Token_Data)->Line_Num); 
@@ -2272,11 +2277,11 @@ yyreduce:
               (yyval.Tree)->child[0]= (yyvsp[-2].Tree);
               (yyval.Tree)->child[1] = (yyvsp[0].Tree); 
             }
-#line 2276 "parser.tab.c" /* yacc.c:1646  */
+#line 2281 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 81:
-#line 646 "parser.y" /* yacc.c:1646  */
+#line 651 "parser.y" /* yacc.c:1646  */
     {
               if(cdbug) printf("<-expression mutable MULASS expression\n");
               (yyval.Tree) = newExpNode(AssignK, (yyvsp[-1].Token_Data)->Line_Num); 
@@ -2285,11 +2290,11 @@ yyreduce:
               (yyval.Tree)->child[0]= (yyvsp[-2].Tree);
               (yyval.Tree)->child[1] = (yyvsp[0].Tree); 
             }
-#line 2289 "parser.tab.c" /* yacc.c:1646  */
+#line 2294 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 82:
-#line 656 "parser.y" /* yacc.c:1646  */
+#line 661 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-expression mutable DIVASS expression\n");
                (yyval.Tree) = newExpNode(AssignK, (yyvsp[-1].Token_Data)->Line_Num); 
@@ -2298,11 +2303,11 @@ yyreduce:
                (yyval.Tree)->child[0]= (yyvsp[-2].Tree);
                (yyval.Tree)->child[1] = (yyvsp[0].Tree); 
             }
-#line 2302 "parser.tab.c" /* yacc.c:1646  */
+#line 2307 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 666 "parser.y" /* yacc.c:1646  */
+#line 671 "parser.y" /* yacc.c:1646  */
     {
               if(cdbug) printf("<-expression mutable INC\n");
               (yyval.Tree) = newExpNode(AssignK, (yyvsp[0].Token_Data)->Line_Num); 
@@ -2310,11 +2315,11 @@ yyreduce:
               (yyval.Tree)->type = Integer;
               (yyval.Tree)->child[0]= (yyvsp[-1].Tree);
             }
-#line 2314 "parser.tab.c" /* yacc.c:1646  */
+#line 2319 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 84:
-#line 675 "parser.y" /* yacc.c:1646  */
+#line 680 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-expression mutable DEC\n");
                (yyval.Tree) = newExpNode(AssignK, (yyvsp[0].Token_Data)->Line_Num);
@@ -2322,20 +2327,20 @@ yyreduce:
                (yyval.Tree)->type = Integer;
                (yyval.Tree)->child[0]= (yyvsp[-1].Tree);
             }
-#line 2326 "parser.tab.c" /* yacc.c:1646  */
+#line 2331 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 85:
-#line 684 "parser.y" /* yacc.c:1646  */
+#line 689 "parser.y" /* yacc.c:1646  */
     {
               if(cdbug) printf("<-expression simpleExpression\n");
               (yyval.Tree)=(yyvsp[0].Tree);
             }
-#line 2335 "parser.tab.c" /* yacc.c:1646  */
+#line 2340 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 86:
-#line 691 "parser.y" /* yacc.c:1646  */
+#line 696 "parser.y" /* yacc.c:1646  */
     {
                      if(cdbug) printf("<-simpleExpression simpleExpression OR andExpression \n");
                      (yyval.Tree) = newExpNode(OpK, (yyvsp[-1].Token_Data)->Line_Num); 
@@ -2344,20 +2349,20 @@ yyreduce:
                      (yyval.Tree)->child[0]= (yyvsp[-2].Tree);
                      (yyval.Tree)->child[1] = (yyvsp[0].Tree); 
                   }
-#line 2348 "parser.tab.c" /* yacc.c:1646  */
+#line 2353 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 87:
-#line 701 "parser.y" /* yacc.c:1646  */
+#line 706 "parser.y" /* yacc.c:1646  */
     {
                      if(cdbug) printf("<-simpleExpression andExpression\n");
                      (yyval.Tree)=(yyvsp[0].Tree);
                   }
-#line 2357 "parser.tab.c" /* yacc.c:1646  */
+#line 2362 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 88:
-#line 708 "parser.y" /* yacc.c:1646  */
+#line 713 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-andExpression andExpression AND unaryRelExpression\n");
                   (yyval.Tree) = newExpNode(OpK, (yyvsp[-1].Token_Data)->Line_Num); 
@@ -2366,22 +2371,22 @@ yyreduce:
                   (yyval.Tree)->child[0]= (yyvsp[-2].Tree);
                   (yyval.Tree)->child[1] = (yyvsp[0].Tree); 
                }
-#line 2370 "parser.tab.c" /* yacc.c:1646  */
+#line 2375 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 89:
-#line 718 "parser.y" /* yacc.c:1646  */
+#line 723 "parser.y" /* yacc.c:1646  */
     {
                  if(cdbug) printf("<-andExpression unaryRelExpression\n");
                  (yyval.Tree)=(yyvsp[0].Tree);
                  
                  
               }
-#line 2381 "parser.tab.c" /* yacc.c:1646  */
+#line 2386 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 90:
-#line 727 "parser.y" /* yacc.c:1646  */
+#line 732 "parser.y" /* yacc.c:1646  */
     {
                         if(cdbug) printf("<-unaryRelExpression NOT unaryRelExpression\n");
                         (yyval.Tree) = newExpNode(OpK, (yyvsp[-1].Token_Data)->Line_Num); 
@@ -2389,220 +2394,220 @@ yyreduce:
                         (yyval.Tree)->type = Bool;
                         (yyval.Tree)->child[0] = (yyvsp[0].Tree); 
                      }
-#line 2393 "parser.tab.c" /* yacc.c:1646  */
+#line 2398 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 91:
-#line 736 "parser.y" /* yacc.c:1646  */
+#line 741 "parser.y" /* yacc.c:1646  */
     {
                         if(cdbug) printf("<-unaryRelExpression relExpression\n");
                         (yyval.Tree) = (yyvsp[0].Tree);
                      }
-#line 2402 "parser.tab.c" /* yacc.c:1646  */
+#line 2407 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 92:
-#line 743 "parser.y" /* yacc.c:1646  */
+#line 748 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-relExpression sumExpression relop sumExpression\n");
                   (yyval.Tree) = (yyvsp[-1].Tree);
                   (yyval.Tree)->child[0] = (yyvsp[-2].Tree);
                   (yyval.Tree)->child[1] = (yyvsp[0].Tree);
                }
-#line 2413 "parser.tab.c" /* yacc.c:1646  */
+#line 2418 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 93:
-#line 751 "parser.y" /* yacc.c:1646  */
+#line 756 "parser.y" /* yacc.c:1646  */
     {
                  if(cdbug) printf("<-relExpression sumExpression\n");
                  (yyval.Tree)=(yyvsp[0].Tree);
                }
-#line 2422 "parser.tab.c" /* yacc.c:1646  */
+#line 2427 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 94:
-#line 758 "parser.y" /* yacc.c:1646  */
+#line 763 "parser.y" /* yacc.c:1646  */
     {
          if(cdbug) printf("<-relop declaration\n");
          (yyval.Tree) = newExpNode(OpK, (yyvsp[0].Token_Data)->Line_Num); 
          (yyval.Tree)->attr.op = (yyvsp[0].Token_Data)->Token_Class;  
          (yyval.Tree)->type = Bool; 
       }
-#line 2433 "parser.tab.c" /* yacc.c:1646  */
+#line 2438 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 95:
-#line 766 "parser.y" /* yacc.c:1646  */
+#line 771 "parser.y" /* yacc.c:1646  */
     {
          if(cdbug) printf("<-relop declaration\n");
          (yyval.Tree) = newExpNode(OpK, (yyvsp[0].Token_Data)->Line_Num); 
          (yyval.Tree)->attr.op = (yyvsp[0].Token_Data)->Token_Class;  
          (yyval.Tree)->type = Bool; 
       }
-#line 2444 "parser.tab.c" /* yacc.c:1646  */
+#line 2449 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 96:
-#line 774 "parser.y" /* yacc.c:1646  */
+#line 779 "parser.y" /* yacc.c:1646  */
     {
          if(cdbug) printf("<-relop declaration\n");
          (yyval.Tree) = newExpNode(OpK, (yyvsp[0].Token_Data)->Line_Num); 
          (yyval.Tree)->attr.op = (yyvsp[0].Token_Data)->Token_Class;  
          (yyval.Tree)->type = Bool; 
       }
-#line 2455 "parser.tab.c" /* yacc.c:1646  */
+#line 2460 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 97:
-#line 782 "parser.y" /* yacc.c:1646  */
+#line 787 "parser.y" /* yacc.c:1646  */
     {
          if(cdbug) printf("<-relop declaration\n");
          (yyval.Tree) = newExpNode(OpK, (yyvsp[0].Token_Data)->Line_Num); 
          (yyval.Tree)->attr.op = (yyvsp[0].Token_Data)->Token_Class;  
          (yyval.Tree)->type = Bool; 
       }
-#line 2466 "parser.tab.c" /* yacc.c:1646  */
+#line 2471 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 98:
-#line 790 "parser.y" /* yacc.c:1646  */
+#line 795 "parser.y" /* yacc.c:1646  */
     {
          if(cdbug) printf("<-relop declaration\n");
          (yyval.Tree) = newExpNode(OpK, (yyvsp[0].Token_Data)->Line_Num); 
          (yyval.Tree)->attr.op = (yyvsp[0].Token_Data)->Token_Class;  
          (yyval.Tree)->type = Bool; 
       }
-#line 2477 "parser.tab.c" /* yacc.c:1646  */
+#line 2482 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 99:
-#line 798 "parser.y" /* yacc.c:1646  */
+#line 803 "parser.y" /* yacc.c:1646  */
     {
          if(cdbug) printf("<-relop declaration\n");
          (yyval.Tree) = newExpNode(OpK, (yyvsp[0].Token_Data)->Line_Num); 
          (yyval.Tree)->attr.op = (yyvsp[0].Token_Data)->Token_Class;  
          (yyval.Tree)->type = Bool; 
       }
-#line 2488 "parser.tab.c" /* yacc.c:1646  */
+#line 2493 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 100:
-#line 807 "parser.y" /* yacc.c:1646  */
+#line 812 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-sumExpression sumExpression sumop mulExpression \n");
                   (yyval.Tree) = (yyvsp[-1].Tree);
                   (yyval.Tree)->child[0] = (yyvsp[-2].Tree);
                   (yyval.Tree)->child[1] = (yyvsp[0].Tree);
                }
-#line 2499 "parser.tab.c" /* yacc.c:1646  */
+#line 2504 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 101:
-#line 815 "parser.y" /* yacc.c:1646  */
+#line 820 "parser.y" /* yacc.c:1646  */
     {
                  if(cdbug) printf("<-sumExpression mulExpression\n");
                  (yyval.Tree)=(yyvsp[0].Tree);
                }
-#line 2508 "parser.tab.c" /* yacc.c:1646  */
+#line 2513 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 102:
-#line 822 "parser.y" /* yacc.c:1646  */
+#line 827 "parser.y" /* yacc.c:1646  */
     {
          if(cdbug) printf("<-sumop declaration\n");
          (yyval.Tree) = newExpNode(OpK, (yyvsp[0].Token_Data)->Line_Num); 
          (yyval.Tree)->attr.op = (yyvsp[0].Token_Data)->Token_Class; 
          (yyval.Tree)->type = Integer; 
       }
-#line 2519 "parser.tab.c" /* yacc.c:1646  */
+#line 2524 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 103:
-#line 830 "parser.y" /* yacc.c:1646  */
+#line 835 "parser.y" /* yacc.c:1646  */
     {
          if(cdbug) printf("<-sumop declaration\n");
          (yyval.Tree) = newExpNode(OpK, (yyvsp[0].Token_Data)->Line_Num); 
          (yyval.Tree)->attr.op = (yyvsp[0].Token_Data)->Token_Class;  
          (yyval.Tree)->type = Integer; 
       }
-#line 2530 "parser.tab.c" /* yacc.c:1646  */
+#line 2535 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 104:
-#line 839 "parser.y" /* yacc.c:1646  */
+#line 844 "parser.y" /* yacc.c:1646  */
     {
                   if(cdbug) printf("<-mulExpression mulExpression mulop unaryExpression \n");
                   (yyval.Tree) = (yyvsp[-1].Tree); 
                   (yyval.Tree)->child[0] = (yyvsp[-2].Tree);
                   (yyval.Tree)->child[1] = (yyvsp[0].Tree);
                }
-#line 2541 "parser.tab.c" /* yacc.c:1646  */
+#line 2546 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 105:
-#line 847 "parser.y" /* yacc.c:1646  */
+#line 852 "parser.y" /* yacc.c:1646  */
     {
                  if(cdbug) printf("<-mulExpression unaryExpression\n");
                  (yyval.Tree)=(yyvsp[0].Tree);
                }
-#line 2550 "parser.tab.c" /* yacc.c:1646  */
+#line 2555 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 106:
-#line 854 "parser.y" /* yacc.c:1646  */
+#line 859 "parser.y" /* yacc.c:1646  */
     {
          if(cdbug) printf("<-mulop declaration\n");
          (yyval.Tree) = newExpNode(OpK, (yyvsp[0].Token_Data)->Line_Num); 
          (yyval.Tree)->attr.op = (yyvsp[0].Token_Data)->Token_Class;  
          (yyval.Tree)->type = Integer;
       }
-#line 2561 "parser.tab.c" /* yacc.c:1646  */
+#line 2566 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 107:
-#line 862 "parser.y" /* yacc.c:1646  */
+#line 867 "parser.y" /* yacc.c:1646  */
     {
          if(cdbug) printf("<-mulop declaration\n");
          (yyval.Tree) = newExpNode(OpK, (yyvsp[0].Token_Data)->Line_Num); 
          (yyval.Tree)->attr.op = (yyvsp[0].Token_Data)->Token_Class;  
          (yyval.Tree)->type = Integer;
       }
-#line 2572 "parser.tab.c" /* yacc.c:1646  */
+#line 2577 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 108:
-#line 870 "parser.y" /* yacc.c:1646  */
+#line 875 "parser.y" /* yacc.c:1646  */
     {
          if(cdbug) printf("<-mulop declaration\n");
          (yyval.Tree) = newExpNode(OpK, (yyvsp[0].Token_Data)->Line_Num); 
          (yyval.Tree)->attr.op = (yyvsp[0].Token_Data)->Token_Class;  
          (yyval.Tree)->type = Integer;
       }
-#line 2583 "parser.tab.c" /* yacc.c:1646  */
+#line 2588 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 109:
-#line 879 "parser.y" /* yacc.c:1646  */
+#line 884 "parser.y" /* yacc.c:1646  */
     {
                      if(cdbug) printf("<-unaryExpression unaryop unaryExpression \n");
                      (yyval.Tree) = (yyvsp[-1].Tree);
                      (yyval.Tree)->child[0] = (yyvsp[0].Tree);
                   }
-#line 2593 "parser.tab.c" /* yacc.c:1646  */
+#line 2598 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 110:
-#line 886 "parser.y" /* yacc.c:1646  */
+#line 891 "parser.y" /* yacc.c:1646  */
     {
                      if(cdbug) printf("<-unaryExpression factor\n");
                      (yyval.Tree)=(yyvsp[0].Tree);
                   }
-#line 2602 "parser.tab.c" /* yacc.c:1646  */
+#line 2607 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 111:
-#line 893 "parser.y" /* yacc.c:1646  */
+#line 898 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-unaryop declaration\n");
             (yyval.Tree) = newExpNode(OpK, (yyvsp[0].Token_Data)->Line_Num); 
@@ -2610,11 +2615,11 @@ yyreduce:
             (yyval.Tree)->type = Integer; 
             (yyval.Tree)->unary = true;
          }
-#line 2614 "parser.tab.c" /* yacc.c:1646  */
+#line 2619 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 112:
-#line 902 "parser.y" /* yacc.c:1646  */
+#line 907 "parser.y" /* yacc.c:1646  */
     {
            if(cdbug) printf("<-unaryop declaration\n");
            (yyval.Tree) = newExpNode(OpK, (yyvsp[0].Token_Data)->Line_Num); 
@@ -2622,11 +2627,11 @@ yyreduce:
            (yyval.Tree)->type = Integer; 
            (yyval.Tree)->unary = true;
          }
-#line 2626 "parser.tab.c" /* yacc.c:1646  */
+#line 2631 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 113:
-#line 911 "parser.y" /* yacc.c:1646  */
+#line 916 "parser.y" /* yacc.c:1646  */
     {
            if(cdbug) printf("<-unaryop declaration\n");
            (yyval.Tree) = newExpNode(OpK, (yyvsp[0].Token_Data)->Line_Num); 
@@ -2634,40 +2639,40 @@ yyreduce:
            (yyval.Tree)->type = Integer;
            //$$->unary = true;
          }
-#line 2638 "parser.tab.c" /* yacc.c:1646  */
+#line 2643 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 114:
-#line 921 "parser.y" /* yacc.c:1646  */
+#line 926 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-factor immutable\n");
             (yyval.Tree)=(yyvsp[0].Tree);
          }
-#line 2647 "parser.tab.c" /* yacc.c:1646  */
+#line 2652 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 115:
-#line 927 "parser.y" /* yacc.c:1646  */
+#line 932 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-factor mutable\n");
             (yyval.Tree)=(yyvsp[0].Tree);
          }
-#line 2656 "parser.tab.c" /* yacc.c:1646  */
+#line 2661 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 116:
-#line 934 "parser.y" /* yacc.c:1646  */
+#line 939 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-mutable ID %s\n", (yyvsp[0].Token_Data)->Token_Str);
             (yyval.Tree) = newExpNode(IdK, (yyvsp[0].Token_Data)->Line_Num); 
             (yyval.Tree)->attr.name = strdup((yyvsp[0].Token_Data)->Token_Str); 
             (yyval.Tree)->type = UndefinedType;
          }
-#line 2667 "parser.tab.c" /* yacc.c:1646  */
+#line 2672 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 117:
-#line 942 "parser.y" /* yacc.c:1646  */
+#line 947 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-mutable mutable LIndex expression RIndex\n");
             (yyval.Tree) = newExpNode(OpK, (yyvsp[-2].Token_Data)->Line_Num);
@@ -2677,38 +2682,38 @@ yyreduce:
             (yyval.Tree)->child[1] = (yyvsp[-1].Tree);
             (yyval.Tree)->type = UndefinedType;
          }
-#line 2681 "parser.tab.c" /* yacc.c:1646  */
+#line 2686 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 118:
-#line 954 "parser.y" /* yacc.c:1646  */
+#line 959 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-immutable LP expression RP \n");
                (yyval.Tree) = (yyvsp[-1].Tree);
             }
-#line 2690 "parser.tab.c" /* yacc.c:1646  */
+#line 2695 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 119:
-#line 960 "parser.y" /* yacc.c:1646  */
+#line 965 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-immutable call\n");
                (yyval.Tree)=(yyvsp[0].Tree);
             }
-#line 2699 "parser.tab.c" /* yacc.c:1646  */
+#line 2704 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 120:
-#line 965 "parser.y" /* yacc.c:1646  */
+#line 970 "parser.y" /* yacc.c:1646  */
     {
                if(cdbug) printf("<-immutable constant\n");
                (yyval.Tree)=(yyvsp[0].Tree);
             }
-#line 2708 "parser.tab.c" /* yacc.c:1646  */
+#line 2713 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 121:
-#line 972 "parser.y" /* yacc.c:1646  */
+#line 977 "parser.y" /* yacc.c:1646  */
     {
          if(cdbug) printf("<-call declaration\n");
          (yyval.Tree) = newExpNode(CallK, (yyvsp[-3].Token_Data)->Line_Num); 
@@ -2716,47 +2721,47 @@ yyreduce:
          (yyval.Tree)->attr.name = strdup((yyvsp[-3].Token_Data)->Token_Str);
          (yyval.Tree)->child[0] = (yyvsp[-1].Tree) ;
       }
-#line 2720 "parser.tab.c" /* yacc.c:1646  */
+#line 2725 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 122:
-#line 982 "parser.y" /* yacc.c:1646  */
+#line 987 "parser.y" /* yacc.c:1646  */
     {
          if(cdbug) printf("<-args declaration\n");
          (yyval.Tree)=(yyvsp[0].Tree);
       }
-#line 2729 "parser.tab.c" /* yacc.c:1646  */
+#line 2734 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 123:
-#line 988 "parser.y" /* yacc.c:1646  */
+#line 993 "parser.y" /* yacc.c:1646  */
     {
          if(cdbug) printf("<-args empty\n");
          (yyval.Tree)=NULL;
       }
-#line 2738 "parser.tab.c" /* yacc.c:1646  */
+#line 2743 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 124:
-#line 995 "parser.y" /* yacc.c:1646  */
+#line 1000 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-argList declaration\n");
             (yyval.Tree) = addSibling((yyvsp[-2].Tree),(yyvsp[0].Tree));
          }
-#line 2747 "parser.tab.c" /* yacc.c:1646  */
+#line 2752 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 125:
-#line 1001 "parser.y" /* yacc.c:1646  */
+#line 1006 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-argList declaration\n");
             (yyval.Tree)=(yyvsp[0].Tree);
          }
-#line 2756 "parser.tab.c" /* yacc.c:1646  */
+#line 2761 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 126:
-#line 1008 "parser.y" /* yacc.c:1646  */
+#line 1013 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-constant NUMCONST : %d\n", (yyvsp[0].Token_Data)->Num_Val);
             (yyval.Tree) = newExpNode(ConstantK, (yyvsp[0].Token_Data)->Line_Num); 
@@ -2764,11 +2769,11 @@ yyreduce:
             (yyval.Tree)->type = Integer;
             (yyval.Tree)->isInit = true;
          }
-#line 2768 "parser.tab.c" /* yacc.c:1646  */
+#line 2773 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 127:
-#line 1017 "parser.y" /* yacc.c:1646  */
+#line 1022 "parser.y" /* yacc.c:1646  */
     {            
             if(cdbug) printf("<-constant CHARCONST\n");
             (yyval.Tree) = newExpNode(ConstantK, (yyvsp[0].Token_Data)->Line_Num); 
@@ -2778,22 +2783,22 @@ yyreduce:
             (yyval.Tree)->type = Char;
             (yyval.Tree)->isInit = true;
          }
-#line 2782 "parser.tab.c" /* yacc.c:1646  */
+#line 2787 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 128:
-#line 1028 "parser.y" /* yacc.c:1646  */
+#line 1033 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-constant STRINGCONST\n");
             (yyval.Tree) = newExpNode(ConstantK, (yyvsp[0].Token_Data)->Line_Num); 
             (yyval.Tree)-> attr.string = strdup((yyvsp[0].Token_Data)->Raw_Str);
             (yyval.Tree)->type = Char;  
          }
-#line 2793 "parser.tab.c" /* yacc.c:1646  */
+#line 2798 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 129:
-#line 1036 "parser.y" /* yacc.c:1646  */
+#line 1041 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-constant FALSE\n");
             (yyval.Tree) = newExpNode(ConstantK, (yyvsp[0].Token_Data)->Line_Num);
@@ -2802,11 +2807,11 @@ yyreduce:
             (yyval.Tree)->attr.op = (yyvsp[0].Token_Data)->Token_Class; 
             (yyval.Tree)->isInit = true;
          }
-#line 2806 "parser.tab.c" /* yacc.c:1646  */
+#line 2811 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 130:
-#line 1046 "parser.y" /* yacc.c:1646  */
+#line 1051 "parser.y" /* yacc.c:1646  */
     {
             if(cdbug) printf("<-constant TRUE\n");
             (yyval.Tree) = newExpNode(ConstantK, (yyvsp[0].Token_Data)->Line_Num);
@@ -2815,11 +2820,11 @@ yyreduce:
             (yyval.Tree)->attr.op = (yyvsp[0].Token_Data)->Token_Class; 
             (yyval.Tree)->isInit = true;
          }
-#line 2819 "parser.tab.c" /* yacc.c:1646  */
+#line 2824 "parser.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 2823 "parser.tab.c" /* yacc.c:1646  */
+#line 2828 "parser.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -3047,7 +3052,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 1058 "parser.y" /* yacc.c:1906  */
+#line 1063 "parser.y" /* yacc.c:1906  */
 
 
 int main(int argc, char **argv){
@@ -3055,7 +3060,7 @@ int main(int argc, char **argv){
    numErrs = 0, numWarns = 0;   
    bool printSyntaxTree = 0;
    
-   void *tmp;
+   TreeNode *tmp;
 
    
 
@@ -3110,14 +3115,25 @@ int main(int argc, char **argv){
    }
    
    yyparse();     //tokenize the entire file
-   
+   prototype();
+
    analyze(syntaxTree);   //syntax anlysis 
-   tmp = st.lookup((char *)"main");
    
-   if (tmp==NULL){
+   st.applyToAll(wasUsed); //check globals
+
+
+   tmp = st.lookupNode((char *)"main");
+   if(tmp != NULL && tmp->nodekind == DeclK && tmp->kind.decl != FuncK || tmp == NULL){      //if its not a function or not found at all
       printf("ERROR(LINKER): Procedure main is not declared.\n");
-      numErrs++;
-   } 
+      numErrs++;      
+   }
+   else{
+         //main found
+   }
+
+
+   
+   
    
    //printf("Print FINAL table.\n");
                

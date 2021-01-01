@@ -9,6 +9,8 @@
 #include <getopt.h>
 #include "semantic.h"
 #include "printtree.h"
+#include "IO.h"
+
 #define YYERROR_VERBOSE
 int yylex();
 extern int yylineno;
@@ -20,6 +22,7 @@ extern bool bug;
 bool cdbug, PAST, STATIC_FLAG;
 int numErrs, numWarns;  
 SymbolTable st;
+
 
 void yyerror(const char *msg)
 {
@@ -481,6 +484,8 @@ iterationRange : EQ simpleExpression RANGE simpleExpression
                   $$->child[1] = $4;
                   $$->child[2] = newExpNode(ConstantK, $1->Line_Num);
                   $$->child[2]-> attr.value = 1;
+                  $$->child[2]->type = Integer;
+
                }
 
                | EQ simpleExpression RANGE simpleExpression COL simpleExpression
@@ -1062,7 +1067,7 @@ int main(int argc, char **argv){
    numErrs = 0, numWarns = 0;   
    bool printSyntaxTree = 0;
    
-   void *tmp;
+   TreeNode *tmp;
 
    
 
@@ -1117,14 +1122,25 @@ int main(int argc, char **argv){
    }
    
    yyparse();     //tokenize the entire file
-   
+   prototype();
+
    analyze(syntaxTree);   //syntax anlysis 
-   tmp = st.lookup((char *)"main");
    
-   if (tmp==NULL){
+   st.applyToAll(wasUsed); //check globals
+
+
+   tmp = st.lookupNode((char *)"main");
+   if(tmp != NULL && tmp->nodekind == DeclK && tmp->kind.decl != FuncK || tmp == NULL){      //if its not a function or not found at all
       printf("ERROR(LINKER): Procedure main is not declared.\n");
-      numErrs++;
-   } 
+      numErrs++;      
+   }
+   else{
+         //main found
+   }
+
+
+   
+   
    
    //printf("Print FINAL table.\n");
                

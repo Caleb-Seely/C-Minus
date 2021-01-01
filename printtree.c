@@ -76,6 +76,7 @@ TreeNode *newDecNode(DeclKind kind, int lineNo){
       t->kind.decl = kind;
       t->lineno = lineNo;
       t->type = Void;
+      
 
    }
    return t;  

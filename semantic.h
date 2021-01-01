@@ -14,5 +14,7 @@ void notWithArrays(TreeNode *tree);
 void unaryError(TreeNode *tree, char* expected);
 void onlyArrays(TreeNode *tree);
 void typeInts(TreeNode *tree);
+void countPerams(TreeNode* tree);
+void compareParams(TreeNode *tree);
 
 #endif

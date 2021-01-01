@@ -49,6 +49,7 @@ typedef struct treeNode
     }attr;   
 
     ExpType type;		           // used when ExpK for type checking
+    ExpType return_type;
     VarKind vType;                        //Variable type 
     bool isArray;                          // is this an array
       int arraySize;                         //Size of array
@@ -57,6 +58,8 @@ typedef struct treeNode
     bool isUsed;                          //var is used
     bool unary;
     bool isErr;
+    int numParams;                        //number of paramters a function has
+    bool isIOControl;
 
     // even more semantic stuff will go here in later assignments.
 } TreeNode;
