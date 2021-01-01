@@ -9,10 +9,37 @@
    #include <stdlib.h>
    #include <ctype.h> 
    #include <stdio.h> 
+   #include <string.h>
    #include "printtree.h"
   // #include "ScanType.h"
    #include "parser.tab.h" 
+   //#include "yyerror.h"
    bool pdbug = false;
+   extern int numErrs, numWarns; 
+
+   static int Char_Error(int LINE_NUMBER, int Token_Class, char* String_Value){
+      if(strlen(String_Value)-2 == 0){
+         printf("ERROR(%d): Empty character ''\n", LINE_NUMBER);
+      }
+      else if(strlen(String_Value)- 2 == 1){
+         
+      }
+      else{
+         printf("WARNING(%d): character is %zu characters long and not a single character: '%s'.  First char used.\n", LINE_NUMBER, strlen(String_Value)-2, String_Value);
+      }
+      //printf("Length %zu\n", strlen(String_Value)-2);
+
+      yylval.Token_Data = new TokenData;
+      yylval.Token_Data->Token_Class = Token_Class;
+      String_Value[2] = 39;
+      String_Value[3] = 0;
+      //printf("Returning %s\n", String_Value);
+      yylval.Token_Data->Token_Str = strdup(String_Value);
+
+      numWarns++;
+      
+      return Token_Class;
+   }
 
    static int Set_Value(int LINE_NUMBER, int Token_Class, char *String_Value){
 
@@ -160,7 +187,7 @@ false                      return Set_Value(LINE_NUMBER, FALSE, yytext);
 "}"            return Set_Value(LINE_NUMBER, RB, yytext);
 "("            return Set_Value(LINE_NUMBER, LP, yytext);
 ")"            return Set_Value(LINE_NUMBER, RP, yytext);
-","            return Set_Value(LINE_NUMBER, COM, yytext);
+","             return Set_Value(LINE_NUMBER, COM, yytext);printf("COM\n");
 ":"            return Set_Value(LINE_NUMBER, COL, yytext);
 
 "+="           return Set_Value(LINE_NUMBER, ADDASS, yytext); // printf("ADDASS %s|\n", yytext); 
@@ -175,19 +202,23 @@ false                      return Set_Value(LINE_NUMBER, FALSE, yytext);
 ">="           return Set_Value(LINE_NUMBER, GRETEQ, yytext);//printf("GRETEQ %s|\n", yytext); 
 
               
-\n	         ++LINE_NUMBER;  
-\'.\'           return Set_Value(LINE_NUMBER, CHARCONST, yytext);
-\.\.           return Set_Value(LINE_NUMBER, RANGE, yytext);
+\n	            ++LINE_NUMBER;  
+''            printf("ERROR(%d): Empty character %s \n", LINE_NUMBER, &yytext[0]); numErrs++;
+
+\'.^\n\'          return Set_Value(LINE_NUMBER, CHARCONST, yytext);
+\.\.              return Set_Value(LINE_NUMBER, RANGE, yytext);
 
 
-[\']\\0[']    return Set_Value(LINE_NUMBER, CHARCONST, (char *)"'\0'" );
-[\']\\n[']    return Set_Value(LINE_NUMBER, CHARCONST, (char*) "'\n'");
-[\'][\\].[\']   return Set_Value(LINE_NUMBER, CHARCONST, &yytext[2]);       //printf("_______________________CHAR CONST WAS FOUND IT WAS %s|\n", yytext);
+[\']\\0[\']        return Set_Value(LINE_NUMBER, CHARCONST, (char *)"'\0'" );
+[\']\\n[']        return Set_Value(LINE_NUMBER, CHARCONST, (char*) "'\n'");
+[\'][\\].[\']     return Set_Value(LINE_NUMBER, CHARCONST, &yytext[2]);       //printf("_______________________CHAR CONST WAS FOUND IT WAS %s|\n", yytext);
 
 " "  ; //White space
 \t  ; //Tabs
-        
-.              LINE_NUMBER++; //printf(" ERR NOT MATCHED |%s|\n", yytext);// return Set_Value(LINE_NUMBER, INVALID, yytext);   ////                      // printf("NOT FOUND: %s\n", yytext);
+
+[\'][^\n.]+[\']  return Char_Error(LINE_NUMBER, CHARCONST, yytext);   printf("CHAR %s ", &yytext[0]);  
+
+.               printf("WARNING(%d): Invalid or misplaced input character: '%c'. Character Ignored.\n", LINE_NUMBER, yytext[0]);  numWarns++;   //printf(" ERR NOT MATCHED |%s|\n", yytext);// return Set_Value(LINE_NUMBER, INVALID, yytext);   ////                      // printf("NOT FOUND: %s\n", yytext);
               
 %%
 //	

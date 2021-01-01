@@ -10,6 +10,7 @@
 #include "semantic.h"
 #include "printtree.h"
 #include "IO.h"
+#include "yyerror.h"
 
 #define YYERROR_VERBOSE
 int yylex();
@@ -23,11 +24,6 @@ bool cdbug, PAST, STATIC_FLAG;
 int numErrs, numWarns;  
 SymbolTable st;
 
-
-void yyerror(const char *msg)
-{
-      printf("ERROR(PARSER): %s\n LINE %d\nToken ", msg, yylineno );
-}
 
 %}
 
@@ -96,33 +92,54 @@ declaration : varDeclaration
                      if(cdbug) printf("<-declaration funDeclaration\n");
                      $$=$1;
                   }
+
+            | error {$$ = NULL; if(cdbug) printf("declaration error\n");}
 ;
 /*4*/
 varDeclaration : typeSpecifier varDeclList SEMI
                      {
+                        yyerrok;
+
                         if(cdbug) printf("<-varDeclaration typeSpecifier varDeclList SEMI\n");
                         $$ = $2;
                         typeToSibs($$, $1->type);
                      }
+
+               | error varDeclList SEMI {$$ = NULL; if(cdbug) printf(" error varDeclaration\n");}
+               | typeSpecifier error SEMI {$$ = NULL; yyerrok; if(cdbug) printf("typeSpecifier error SEMI\n");}
 ;
 /*5*/
 scopedVarDeclaration : scopedTypeSpecifier varDeclList SEMI
                      {
+                        yyerrok;
                         if(cdbug) printf("<-scopedVarDeclaration scopedTypeSpecifier varDeclList\n");
                         $$ = $2;
-                        $$->type = $1->type;
+                        if($2 != NULL){
+                          $$->type = $1->type; 
+                        }
+                        
                         if(STATIC_FLAG) {
                            $$->isStatic = true;
                            STATIC_FLAG = false;
                         }
                         typeToSibs($$, $1->type);
+
+                        
                      }
+
+                     | scopedTypeSpecifier error SEMI {$$ = NULL; yyerrok; if(cdbug) printf("scopedTypeSpecifier error SEMI\n");}
+                     | error varDeclList SEMI         {$$ = NULL; yyerrok; if(cdbug) printf("error vardeclist SEMI\n");}
+                     
+
 ;
 /*6*/
 varDeclList :  varDeclList COM varDeclInitialize         
             {
+               yyerrok;
                if(cdbug) printf("<-varDeclList varDeclList COM varDeclInitialize ADD SIBLINGS 6\n");
                $$ = addSibling($1,$3);
+
+               
             }
 
             |  varDeclInitialize                         
@@ -130,6 +147,10 @@ varDeclList :  varDeclList COM varDeclInitialize
                if(cdbug) printf("<-varDeclList varDeclInitialize\n");
                $$ = $1;
             }
+
+            | varDeclList COM error { $$ = NULL; if(cdbug) printf("varDeclList error\n");}
+            | error COM varDeclInitialize {  $$ = NULL; if(cdbug) printf("error COM varDeclInitialize\n");}
+            | error { $$ = NULL; if(cdbug) printf(" vardclist error\n");}
 ;
 /*7*/
 varDeclInitialize : varDeclId                            
@@ -144,6 +165,10 @@ varDeclInitialize : varDeclId
                      $$=$1;
                      $$->child[0] = $3;
                   }
+                  
+                  | error COL simpleExpression { yyerrok; $$ = NULL; if(cdbug) printf("varDeclInitialize error\n");}
+                  | varDeclId COL error { $$ = NULL; if(cdbug) ("varDeclInitialize error\n");}
+                  | error  { $$ = NULL; if(cdbug) printf("varDeclInitialize error\n"); }
 ;
 /*8*/
 varDeclId : ID                                  
@@ -151,20 +176,24 @@ varDeclId : ID
                if(cdbug) printf("<-varDeclId ID\n");
                $$ = newDecNode(VarK, $1->Line_Num);
                $$->attr.name = strdup($1->Token_Str);
+               yyerrok;
             }
 
-          | ID LIndex NUMCONST RIndex          
-          {
-               if(cdbug) printf("<-varDeclId ID LIndex NUMCONST RIndex \n");  //array define
-               $$ = newDecNode(VarK, $1->Line_Num);
-               $$->attr.name = strdup($1->Token_Str); 
-               $$->TD = $1;
-               $$->attr.value = $3->Num_Val;    //posibly not needed
-               $$->isArray = true;
-               $$->attr.op = $2->Token_Class;
-               $$->type = UndefinedType;
-          }
+            | ID LIndex NUMCONST RIndex          
+            {
+               yyerrok;
+                  if(cdbug) printf("<-varDeclId ID LIndex NUMCONST RIndex \n");  //array define
+                  $$ = newDecNode(VarK, $1->Line_Num);
+                  $$->attr.name = strdup($1->Token_Str); 
+                  $$->TD = $1;
+                  $$->attr.value = $3->Num_Val;    //posibly not needed
+                  $$->isArray = true;
+                  $$->attr.op = $2->Token_Class;
+                  $$->type = UndefinedType;
+            }
 
+            | ID LIndex error { $$ = NULL; }
+            | error RIndex { yyerrok; $$ = NULL; }
  
 ;
 /*9*/
@@ -180,6 +209,8 @@ scopedTypeSpecifier : STATIC typeSpecifier
                        if(cdbug) printf("<-scopedTypeSpecifier typeSpecifier\n");
                         $$ = $1;
                     }
+
+                    | typeSpecifier error { $$ = NULL; if(cdbug) printf("typeSpecifier error\n"); }
 ;
 /*10*/
 typeSpecifier : INT     
@@ -221,6 +252,12 @@ funDeclaration : typeSpecifier ID LP params RP statement
                   $$->child[0] = $3;
                   $$->child[1] = $5;
                }
+
+               | typeSpecifier ID LP error            { $$ = NULL; }
+               | typeSpecifier ID LP params RP error  { $$ = NULL; }
+               | ID LP error                          { $$ = NULL; }
+               | ID LP params RP error                { $$ = NULL; }
+               | typeSpecifier error               { $$ = NULL; if(cdbug) printf("typeSpecifier error\n"); }
 ;
 /*12*/
 params : paramList   
@@ -238,15 +275,21 @@ params : paramList
 /*13*/
 paramList : paramList SEMI paramTypeList     
             {
+               yyerrok;
+               
                if(cdbug) printf("<-paramList paramList SEMI paramTypeList ADD SIBLINGS 13\n");
                $$ = addSibling($1,$3);
             }
 
-          | paramTypeList               
-            {
-               if(cdbug) printf("<-paramList paramTypeList\n");
-               $$=$1;
-            }
+            | paramTypeList               
+               {
+                  if(cdbug) printf("<-paramList paramTypeList\n");
+                  $$=$1;
+               }
+
+            | paramList SEMI error  { $$ = NULL; if(cdbug) printf("paramList SEMI error\n"); }
+            | error SEMI paramTypeList { yyerrok; $$ = NULL; if(cdbug) printf(" error SEMI paramTypeList\n");}
+            | error                 { $$ = NULL; if(cdbug) printf("Paramlist error\n"); }
 ;
 /*14*/
 paramTypeList : typeSpecifier paramIdList    
@@ -255,10 +298,14 @@ paramTypeList : typeSpecifier paramIdList
                   $$ = $2;
                   typeToSibs($$, $1->type);      
                }
+
+               | typeSpecifier error { $$ = NULL; if(cdbug) printf("typeSpecifier error\n"); }
 ;
 /*15*/
 paramIdList : paramIdList COM paramId        
             {
+               yyerrok;
+
                if(cdbug) printf("<-declarationList paramIdList COM paramId ADD SIBLINGS 15\n");
                $$ = addSibling($1,$3);
             }
@@ -268,10 +315,14 @@ paramIdList : paramIdList COM paramId
                if(cdbug) printf("<-paramIdList paramId\n");
                $$=$1;
             }
+
+            | paramIdList COM error { $$ = NULL; if(cdbug) printf("paramIdList COM error\n"); }
+            | error COM paramId {yyerrok; $$ = NULL; if(cdbug) printf(" error COM paramId\n");}
 ;
 /*16*/
 paramId : ID                   
          {
+            yyerrok;
             if(cdbug) printf("<-paramId ID\n");
             $$ = newDecNode(ParamK, $1->Line_Num); 
             $$->attr.name = strdup($1->Token_Str); 
@@ -280,6 +331,8 @@ paramId : ID
 
         | ID LIndex RIndex     
          {
+            yyerrok;
+
             if(cdbug) printf("<-paramId ID LIndex RIndex\n");
             $$ = newDecNode(ParamK, $1->Line_Num);
             $$->attr.name = strdup($1->Token_Str);  
@@ -287,6 +340,9 @@ paramId : ID
             $$->isInit = true;
             $$->type = UndefinedType;
          }
+
+         | error RIndex {yyerrok; $$ = NULL; }
+         | error { $$ = NULL; }
 ;
 /*17*/
 //Statements
@@ -303,26 +359,37 @@ statement :  expressionStmt   {$$=$1; if(cdbug) printf("<-statementexpressionStm
 /*18*/
 expressionStmt : expression SEMI 
                {
+                  yyerrok;
+
                   if(cdbug) printf("<-expressionStmt expression SEMI\n");
                   $$=$1;
                }
 
                | SEMI     
                   {
+                     yyerrok; 
+
                      if(cdbug) printf("<-expressionStmt SEMI\n");
-                     $$=NULL;
+                     $$=NULL;                     
                   }
+
+               | error SEMI { yyerrok; $$ = NULL; }
 ;
 
 /*19*/
 compoundStmt : LB localDeclarations statementList RB      
                {
+                  yyerrok; 
+
                   if(cdbug) printf("<-compoundStmt LB localDeclarations statementList RB\n");
                   $$ = newStmtNode(CompoundK, $1->Line_Num);
                   //$$->attr.op = $1->Token_Class;
                   $$->child[0] = $2;
                   $$->child[1] = $3;
                }
+
+               | LB error statementList RB      { $$ = NULL; }
+               | LB localDeclarations error RB  {yyerrok; $$ = NULL; }
 ;
 /*20*/
 localDeclarations : localDeclarations scopedVarDeclaration 
@@ -355,19 +422,6 @@ partialStmt : expressionStmt   {$$=$1; if(cdbug) printf("<-partialStmt expressio
             | breakStmt {$$=$1; if(cdbug) printf("<-partialStmt breakStmt\n");} 
 ;
 
-// selectionStmt : matchedIf 
-//                {
-//                   if(cdbug) printf("<-selectionStmt matchedIf \n");
-//                   $$=$1;
-//                }
-//                | unmatchedIf 
-//                {
-//                   if(cdbug) printf("<-selectionStmt unmatchedIf \n");
-//                   $$=$1;
-//                }
-               
-// ;
-
 matched : matchedIf  
          {
             if(cdbug) printf("<-matched matchedIf \n");
@@ -383,6 +437,7 @@ matched : matchedIf
             if(cdbug) printf("<-matched partialStmt \n");
             $$=$1;
          }
+         | error { $$ = NULL; }
 ;
 
 unmatched : unmatchedIf 
@@ -406,6 +461,9 @@ matchedIf : IF simpleExpression THEN matched matchedElse
                $$->child[2] = $5;
                
             }
+
+            | IF error { $$ = NULL; }
+            | IF error THEN matched matchedElse { $$ = NULL; yyerrok;}
 ;
 
 matchedElse : ELSIF simpleExpression THEN matched matchedElse 
@@ -421,6 +479,8 @@ matchedElse : ELSIF simpleExpression THEN matched matchedElse
                if(cdbug) printf("<-matchedElse ELSE matched : %d\n", $2->attr.value);
                $$=$2;
             }
+
+            | ELSIF error { $$ = NULL; }
 ;
 unmatchedIf : IF simpleExpression THEN matched 
             {
@@ -445,6 +505,9 @@ unmatchedIf : IF simpleExpression THEN matched
                   $$->child[2] = $5;
                  // $$ = addSibling($2,$5);
             }
+
+            | IF error THEN matched { $$ = NULL; yyerrok;}
+            | IF error THEN matched unmatchedElse { $$ = NULL; yyerrok;}
 ;
 unmatchedElse : ELSIF simpleExpression THEN matched 
                {
@@ -473,6 +536,8 @@ unmatchedElse : ELSIF simpleExpression THEN matched
                   if(cdbug) printf("<-unmatchedElse ELSE unmatched \n");
                   $$ = $2;
                }
+
+               | ELSIF error { $$ = NULL; }
 ;
 
 /*24*/
@@ -497,26 +562,30 @@ iterationRange : EQ simpleExpression RANGE simpleExpression
                   $$->child[1] = $4;
                   $$->child[2] = $6;
                }
+
+               | EQ simpleExpression RANGE error                        { $$ = NULL; }
+               | EQ simpleExpression RANGE simpleExpression COL error   { $$ = NULL; }
 ;
 
 matchedWhile : WHILE simpleExpression DO matched   
                {
-                  if(cdbug) printf("<-unmatchedWhile WHILE simpleExpression DO unmatched\n");
+                  if(cdbug) printf("<-matchedWhile WHILE simpleExpression DO unmatched\n");
                   $$ = newStmtNode(WhileK, $1->Line_Num);
                   $$->attr.op = $1->Token_Class; 
                   $$->child[0]=$2;
                   $$->child[1] = $4;
                }
+
                | LOOP FOREVER matched 
                {
-                  if(cdbug) printf("<-unmatchedWhile LOOP FOREVER unmatched\n");
+                  if(cdbug) printf("<-matchedWhile LOOP FOREVER matched\n");
                   $$ = newStmtNode(LoopForeverK, $1->Line_Num); 
                   $$->attr.op = $1->Token_Class;
                   $$->child[1]=$3; 
                }
                | LOOP ID iterationRange DO matched 
                {
-                  if(cdbug) printf("<-unmatchedWhile LOOP iterationRange DO unmatched\n");
+                  if(cdbug) printf("<-matchedWhile ID iterationRange DO matched\n");
                   $$ = newStmtNode(LoopK, $1->Line_Num);
                   $$->attr.op = $1->Token_Class;  $$->type = Void;
                   $$->child[0] = newDecNode(VarK, $2->Line_Num);
@@ -526,6 +595,12 @@ matchedWhile : WHILE simpleExpression DO matched
                   $$->child[1] = $3;
                   $$->child[2] = $5; 
                }
+
+               | WHILE error DO matched   { yyerrok; $$ = NULL;if(cdbug) printf("matchedWhile WHILE error DO matched\n");}
+               | WHILE error              { $$ = NULL; if(cdbug) printf("matchedWhile WHILE error\n");}
+               | LOOP ID error DO matched { yyerrok; $$ = NULL; if(cdbug) printf("matchedWhile LOOP ID error DO matched\n");}
+               | LOOP ID error            { $$ = NULL; if(cdbug) printf("matchedWhile LOOP ID error\n");}
+               | LOOP error               { $$ = NULL; if(cdbug) printf("matchedWhile LOOP error\n");}
 ;
 
 unmatchedWhile : WHILE simpleExpression DO unmatched  
@@ -555,6 +630,9 @@ unmatchedWhile : WHILE simpleExpression DO unmatched
                   $$->child[1] = $3;
                   $$->child[2] = $5;   
                }
+
+               | WHILE error DO unmatched                   { $$ = NULL; yyerrok;}
+               | LOOP ID iterationRange error DO unmatched  { $$ = NULL; yyerrok;}
 ;
 
 /*25*/
@@ -568,15 +646,15 @@ iterationStmt : WHILE simpleExpression DO statement
                   $$->child[1] = $4;  
                }
 
-              | LOOP FOREVER statement               
-              {
-                  if(cdbug) printf("<-iterationStmt declaration\n");
-                  $$ = newStmtNode(LoopForeverK, $1->Line_Num); 
-                  $$->attr.op = $1->Token_Class;
-                  $$->child[1] = $3; 
-               }
+               | LOOP FOREVER statement               
+               {
+                     if(cdbug) printf("<-iterationStmt declaration\n");
+                     $$ = newStmtNode(LoopForeverK, $1->Line_Num); 
+                     $$->attr.op = $1->Token_Class;
+                     $$->child[1] = $3; 
+                  }
 
-              | LOOP ID iterationRange DO statement     
+               | LOOP ID iterationRange DO statement     
                {
                   if(cdbug) printf("<-iterationStmt declaration\n");
                   $$ = newStmtNode(LoopK, $1->Line_Num);
@@ -588,11 +666,17 @@ iterationStmt : WHILE simpleExpression DO statement
                   $$->child[1] = $3;
                   $$->child[2] = $5;
                }
+
+               | WHILE error DO statement    { $$ = NULL; yyerrok;}
+               | LOOP ID error DO statement  { $$ = NULL; yyerrok;}        
+
+
 ;
 
 /*26*/
 returnStmt : RETURN SEMI    
             {
+               yyerrok;
                if(cdbug) printf("<-returnStmt declaration\n");
                $$ = newStmtNode(ReturnK, $1->Line_Num);
                $$->attr.op = $1->Token_Class;
@@ -600,16 +684,19 @@ returnStmt : RETURN SEMI
 
            | RETURN expression SEMI  
             {
+               yyerrok;
                if(cdbug) printf("<-returnStmt declaration\n");
                $$ = newStmtNode(ReturnK, $1->Line_Num); 
                $$->attr.op = $1->Token_Class;  
                $$->type = $2->type;
                $$->child[0] = $2;
             }
+
 ;
 /*27*/
 breakStmt : BREAK SEMI       
             {
+               yyerrok;
                if(cdbug) printf("<-breakStmt declaration\n");
                $$ = newStmtNode(BreakK, $1->Line_Num);
                $$->attr.op = $1->Token_Class;
@@ -674,6 +761,7 @@ expression : mutable EQ expression
               $$->attr.op = $2->Token_Class;  
               $$->type = Integer;
               $$->child[0]= $1;
+              yyerrok;
             }
 
            | mutable DEC      
@@ -683,6 +771,7 @@ expression : mutable EQ expression
                $$->attr.op = $2->Token_Class;  
                $$->type = Integer;
                $$->child[0]= $1;
+               yyerrok;
             }
 
            | simpleExpression 
@@ -690,6 +779,28 @@ expression : mutable EQ expression
               if(cdbug) printf("<-expression simpleExpression\n");
               $$=$1;
             }
+
+            | error INC             { $$ = NULL; yyerrok;}
+            | error DEC             { $$ = NULL; yyerrok;}
+            
+            | error ADDASS error    { $$ = NULL;}
+            | error SUBASS error    { $$ = NULL;}
+            | error MULASS error    { $$ = NULL;}
+            | error DIVASS error    { $$ = NULL;}
+            | error EQ error        { $$ = NULL;}
+
+            | error ADDASS expression    { yyerrok; $$ = NULL;}
+            | error SUBASS expression    { yyerrok; $$ = NULL;}
+            | error MULASS expression    { yyerrok; $$ = NULL;}
+            | error DIVASS expression    { yyerrok; $$ = NULL;}
+            | error EQ expression        { yyerrok; $$ = NULL;}
+
+            | mutable ADDASS error    { $$ = NULL;}
+            | mutable SUBASS error    { $$ = NULL;}
+            | mutable MULASS error    { $$ = NULL;}
+            | mutable DIVASS error    { $$ = NULL;}
+            | mutable EQ error        { $$ = NULL;}
+            
 ;
 /*29*/
 simpleExpression : simpleExpression OR andExpression 
@@ -702,11 +813,15 @@ simpleExpression : simpleExpression OR andExpression
                      $$->child[1] = $3; 
                   }
 
-                 | andExpression
+                  | andExpression
                   {
                      if(cdbug) printf("<-simpleExpression andExpression\n");
                      $$=$1;
                   }
+
+                  | simpleExpression OR error { $$ = NULL; }
+                  | error OR andExpression { yyerrok; $$ = NULL; }
+                  | error OR error { $$ = NULL; }
 ;
 /*30*/
 andExpression : andExpression AND unaryRelExpression 
@@ -722,10 +837,12 @@ andExpression : andExpression AND unaryRelExpression
               | unaryRelExpression
               {
                  if(cdbug) printf("<-andExpression unaryRelExpression\n");
-                 $$=$1;
-                 
-                 
+                 $$=$1;         
               }
+
+              | simpleExpression AND error { $$ = NULL; }
+              | error AND unaryRelExpression { yyerrok; $$ = NULL;}
+              | error AND error              { $$ = NULL; }
 ;
 /*31*/
 unaryRelExpression : NOT unaryRelExpression 
@@ -737,11 +854,13 @@ unaryRelExpression : NOT unaryRelExpression
                         $$->child[0] = $2; 
                      }
 
-                   | relExpression
+                     | relExpression
                      {
                         if(cdbug) printf("<-unaryRelExpression relExpression\n");
                         $$ = $1;
                      }
+
+                     | NOT error { $$ = NULL; }
 ;
 /*32*/
 relExpression : sumExpression relop sumExpression 
@@ -752,11 +871,15 @@ relExpression : sumExpression relop sumExpression
                   $$->child[1] = $3;
                }
 
-              | sumExpression                   
-              {
-                 if(cdbug) printf("<-relExpression sumExpression\n");
-                 $$=$1;
+               | sumExpression                   
+               {
+                  if(cdbug) printf("<-relExpression sumExpression\n");
+                  $$=$1;
                }
+
+               | sumExpression relop error { $$ = NULL; }
+               | error relop sumExpression { yyerrok; $$ = NULL; }
+               | error relop error         { $$ = NULL;}
 ;
 /*33*/
 relop : EQEQ     
@@ -816,11 +939,15 @@ sumExpression : sumExpression sumop mulExpression
                   $$->child[1] = $3;
                }
 
-              | mulExpression                   
-              {
-                 if(cdbug) printf("<-sumExpression mulExpression\n");
-                 $$=$1;
+               | mulExpression                   
+               {
+                  if(cdbug) printf("<-sumExpression mulExpression\n");
+                  $$=$1;
                }
+
+               | sumExpression sumop error  { $$ = NULL;}   //yyerrok taken out
+               | error sumop mulExpression  {yyerrok; $$ = NULL;}
+               | error sumop error           {$$ = NULL;}
 ;
 /*35*/
 sumop : PLUS 
@@ -848,11 +975,15 @@ mulExpression : mulExpression mulop unaryExpression
                   $$->child[1] = $3;
                }
 
-              | unaryExpression     
-              {
-                 if(cdbug) printf("<-mulExpression unaryExpression\n");
-                 $$=$1;
+               | unaryExpression     
+               {
+                  if(cdbug) printf("<-mulExpression unaryExpression\n");
+                  $$=$1;
                }
+
+               | mulExpression mulop error   { $$ = NULL; }
+               | error mulop unaryExpression { yyerrok; $$ = NULL;}
+               | error mulop error           { $$ = NULL;}
 ;
 /*37*/
 mulop : MULTIPLY 
@@ -886,12 +1017,14 @@ unaryExpression : unaryop unaryExpression
                      $$ = $1;
                      $$->child[0] = $2;
                   }
-
-                | factor            
+ 
+                  | factor            
                   {
                      if(cdbug) printf("<-unaryExpression factor\n");
                      $$=$1;
                   }
+
+                  | unaryop error { $$ = NULL; }
 ;
 /*39*/
 unaryop : MINUS 
@@ -937,6 +1070,8 @@ factor : immutable
 /*41*/
 mutable : ID                        
          {
+            yyerrok;
+
             if(cdbug) printf("<-mutable ID %s\n", $1->Token_Str);
             $$ = newExpNode(IdK, $1->Line_Num); 
             $$->attr.name = strdup($1->Token_Str); 
@@ -945,6 +1080,8 @@ mutable : ID
 
         | mutable LIndex expression RIndex 
          {
+            yyerrok;
+
             if(cdbug) printf("<-mutable mutable LIndex expression RIndex\n");
             $$ = newExpNode(OpK, $2->Line_Num);
             $$->attr.op = $2->Token_Class;
@@ -953,34 +1090,47 @@ mutable : ID
             $$->child[1] = $3;
             $$->type = UndefinedType;
          }
+
+         | ID LB error  {$$ = NULL;}
+         | error RB     {yyerrok; $$ = NULL;}
 ;
 /*42*/
 immutable : LP expression RP 
             {
+               yyerrok;
                if(cdbug) printf("<-immutable LP expression RP \n");
                $$ = $2;
+
+              
             }
 
-          | call              
+            | call              
             {
                if(cdbug) printf("<-immutable call\n");
                $$=$1;
             }
-          | constant          
+            | constant          
             {
                if(cdbug) printf("<-immutable constant\n");
                $$=$1;
             }
+
+            | LP error  { $$ = NULL; }
+            
 ;
 /*43*/
 call : ID LP args RP
       {
+         yyerrok;
          if(cdbug) printf("<-call declaration\n");
          $$ = newExpNode(CallK, $1->Line_Num); 
          //$$->type = $3->type;
          $$->attr.name = strdup($1->Token_Str);
          $$->child[0] = $3 ;
       }
+
+      | error RP { $$ = NULL; yyerrok;}
+      | ID LP error {$$ = NULL;}
 ;
 /*44*/
 args : argList 
@@ -998,19 +1148,26 @@ args : argList
 /*45*/
 argList : argList COM expression 
          {
+            yyerrok;
             if(cdbug) printf("<-argList declaration\n");
             $$ = addSibling($1,$3);
+
+            
          }
 
-        | expression
+         | expression
          {
             if(cdbug) printf("<-argList declaration\n");
             $$=$1;
          }
+
+         | argList COM error { $$ = NULL; }
+         | error COM expression { yyerrok; $$ = NULL;}
 ;
 /*46*/
 constant : NUMCONST     
          {
+            yyerrok;
             if(cdbug) printf("<-constant NUMCONST : %d\n", $1->Num_Val);
             $$ = newExpNode(ConstantK, $1->Line_Num); 
             $$-> attr.value = $1->Num_Val;
@@ -1019,7 +1176,8 @@ constant : NUMCONST
          }
 
          | CHARCONST    
-         {            
+         {      
+            yyerrok;      
             if(cdbug) printf("<-constant CHARCONST\n");
             $$ = newExpNode(ConstantK, $1->Line_Num); 
             $$->TD=$1;
@@ -1031,6 +1189,7 @@ constant : NUMCONST
 
          | STRINGCONST  
          {
+            yyerrok;
             if(cdbug) printf("<-constant STRINGCONST\n");
             $$ = newExpNode(ConstantK, $1->Line_Num); 
             $$-> attr.string = strdup($1->Raw_Str);
@@ -1039,6 +1198,7 @@ constant : NUMCONST
 
          | FALSE        
          {
+            yyerrok;
             if(cdbug) printf("<-constant FALSE\n");
             $$ = newExpNode(ConstantK, $1->Line_Num);
             $$->attr.value = 0;
@@ -1049,6 +1209,7 @@ constant : NUMCONST
 
          | TRUE         
          {
+            yyerrok;
             if(cdbug) printf("<-constant TRUE\n");
             $$ = newExpNode(ConstantK, $1->Line_Num);
             $$->attr.value = 1;
@@ -1121,29 +1282,26 @@ int main(int argc, char **argv){
       }
    }
    
+   initErrorProcessing();
    yyparse();     //tokenize the entire file
-   prototype();
 
-   analyze(syntaxTree);   //syntax anlysis 
-   
-   st.applyToAll(wasUsed); //check globals
+   // If there are syntax errors, we can now look for semantic ones
+   if(numErrs == 0){          
+      prototype();         //IO prototypes
+      analyze(syntaxTree);   //syntax anlysis  
+      st.applyToAll(wasUsed); //check globals
 
+      tmp = st.lookupNode((char *)"main");
+      if(tmp != NULL && tmp->nodekind == DeclK && tmp->kind.decl != FuncK || tmp == NULL){      //if its not a function or not found at all
+         printf("ERROR(LINKER): Procedure main is not declared.\n");
+         numErrs++;      
+      }
+      else{
+            //main found
+      }
+   } 
 
-   tmp = st.lookupNode((char *)"main");
-   if(tmp != NULL && tmp->nodekind == DeclK && tmp->kind.decl != FuncK || tmp == NULL){      //if its not a function or not found at all
-      printf("ERROR(LINKER): Procedure main is not declared.\n");
-      numErrs++;      
-   }
-   else{
-         //main found
-   }
-
-
-   
-   
-   
-   //printf("Print FINAL table.\n");
-               
+   //printf("Print FINAL table.\n");              
    //st.print(pointerPrintStr);
    if(printSyntaxTree) TreePrint(syntaxTree, 0);   //print the tree
 
