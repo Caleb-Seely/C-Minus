@@ -21,8 +21,27 @@
       if(strlen(String_Value)-2 == 0){
          printf("ERROR(%d): Empty character ''\n", LINE_NUMBER);
       }
-      else if(strlen(String_Value)- 2 == 1){
+      else if(strlen(String_Value)- 2 == 1 || String_Value[1] == 92){
          
+         if( String_Value[1] == 92){
+            
+            if(String_Value[2] ==110 ){
+               printf("MADE it %s\n", String_Value);
+               String_Value[1] = 10 ;
+               
+            }
+            else if(String_Value[2] ==48 ){
+               printf("MADE it %s\n", String_Value);
+               String_Value[1] = 0 ;
+               
+            }
+            else{
+               String_Value[1] = String_Value[2];
+               String_Value[2] = String_Value[0];
+               String_Value[2] = 0;               
+            }
+
+         }
       }
       else{
          printf("WARNING(%d): character is %zu characters long and not a single character: '%s'.  First char used.\n", LINE_NUMBER, strlen(String_Value)-2, String_Value);
@@ -205,18 +224,15 @@ false                      return Set_Value(LINE_NUMBER, FALSE, yytext);
 \n	            ++LINE_NUMBER;  
 ''            printf("ERROR(%d): Empty character %s \n", LINE_NUMBER, &yytext[0]); numErrs++;
 
-\'.^\n\'          return Set_Value(LINE_NUMBER, CHARCONST, yytext);
+'(\\.|[^\n'\\])'          return Char_Error(LINE_NUMBER, CHARCONST, yytext);
 \.\.              return Set_Value(LINE_NUMBER, RANGE, yytext);
 
 
-[\']\\0[\']        return Set_Value(LINE_NUMBER, CHARCONST, (char *)"'\0'" );
-[\']\\n[']        return Set_Value(LINE_NUMBER, CHARCONST, (char*) "'\n'");
-[\'][\\].[\']     return Set_Value(LINE_NUMBER, CHARCONST, &yytext[2]);       //printf("_______________________CHAR CONST WAS FOUND IT WAS %s|\n", yytext);
 
 " "  ; //White space
 \t  ; //Tabs
 
-[\'][^\n.]+[\']  return Char_Error(LINE_NUMBER, CHARCONST, yytext);   printf("CHAR %s ", &yytext[0]);  
+
 
 .               printf("WARNING(%d): Invalid or misplaced input character: '%c'. Character Ignored.\n", LINE_NUMBER, yytext[0]);  numWarns++;   //printf(" ERR NOT MATCHED |%s|\n", yytext);// return Set_Value(LINE_NUMBER, INVALID, yytext);   ////                      // printf("NOT FOUND: %s\n", yytext);
               
