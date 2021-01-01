@@ -5,4 +5,5 @@ typedef struct{
    char *Token_Str;
    int Num_Val;
    char *Raw_Str;
+   bool n;
 }TokenData;

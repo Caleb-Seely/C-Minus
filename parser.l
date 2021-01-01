@@ -9,8 +9,10 @@
    #include <stdlib.h>
    #include <ctype.h> 
    #include <stdio.h> 
-   #include "ScanType.h"
+   #include "tree.h"
+  // #include "ScanType.h"
    #include "parser.tab.h" 
+   bool pdbug = false;
 
    static int Set_Value(int LINE_NUMBER, int Token_Class, char *String_Value){
 
@@ -24,7 +26,7 @@
 
       switch (Token_Class) {
          case NUMCONST:
-         yylval.Token_Data->Num_Val = atof(String_Value); 
+         yylval.Token_Data->Num_Val = atoi(String_Value); 
          break;
 
          case STRINGCONST:{
@@ -63,24 +65,33 @@
             break;
          }
 
-         case CHARCONST_ESC:{
-            char *tmp = "\0";
-            if(String_Value[2] == 48){ //Null
+         case CHARCONST:{
+            char *tmp = '\0';
+            //printf("Token_Str  |%d|\n", String_Value[0]);
+            if(String_Value[0] == 34){ // "STRING"
+              // printf("ONE = 34\n");
                
-               yylval.Token_Data -> Raw_Str = tmp;
+               break;
             }
-            else if (String_Value[2] == 110){   //Newline
-               tmp = "\n";
-               yylval.Token_Data -> Raw_Str = tmp;
+            else if(String_Value[1] == 39){ //''
+            //printf("ONE = 39\n");
+               String_Value[2] = 39;
+               String_Value[1] = String_Value[0];
+               String_Value[0] = 39;
+               String_Value[3] = 0;
+               yylval.Token_Data -> Token_Str = strdup(&String_Value[0]);
+               break;
+               //printf("Token_Str NEW |%s|\n", yylval.Token_Data->Token_Str);
             }
-            else{    //Non special 
-               String_Value[3] = '\0';
-               yylval.Token_Data -> Raw_Str = strdup(&String_Value[2]); 
-            }
+
+            
+            //printf("STILL MISING |%s|\n", yylval.Token_Data->Token_Str);
+               yylval.Token_Data -> Token_Str = strdup(&String_Value[0]);
+               
             break;
          }
          
-         case KEY:{
+         case INT:{
             char ch ; 
             int j =0;
             while (String_Value[j]) { 
@@ -90,26 +101,6 @@
             }     
             break;    
          }
-
-         case BOOLCONST:{
-            if(strcmp("true",String_Value)){
-               yylval.Token_Data ->Num_Val = 0;      
-               //printf("SET TO ZERO\n\n");  
-               break;
-            }
-            else{
-               yylval.Token_Data ->Num_Val = 1;
-               break;
-            }     
-         } 
-         case CHAR_ERR:{
-            int x = strlen(String_Value)-2;
-            printf("Error(%d): character is %d characters and not a single character: %s.  First char used.\n", LINE_NUMBER, x, String_Value);
-            yylval.Token_Data -> Raw_Str = strdup(String_Value);
-            String_Value[2] = '\0';
-            yylval.Token_Data -> Token_Str = strdup(&String_Value[1]);
-            break;
-         } 
       }
       return Token_Class;
    }
@@ -125,32 +116,51 @@ SINGLE_CHAR [\;\,\:\=\+\-\<\>\*\?/\%\[\]\{\}\(\)]
 
 %%
 
-static |
-int |
-bool |
-char |
-if |
-else |
-elsif |
-then |
-while |
-do |
-loop | 
-forever |
-break |
-and |
-or |
-not |
-return                     return Set_Value(LINE_NUMBER,KEY,yytext); // printf("\nKEY: %s\n", yytext);
+static                     return Set_Value(LINE_NUMBER,STATIC,yytext);
+int                        return Set_Value(LINE_NUMBER,INT,yytext);      
+bool                       return Set_Value(LINE_NUMBER,BOOL,yytext);
+char                       return Set_Value(LINE_NUMBER,CHAR,yytext);
+if                         return Set_Value(LINE_NUMBER,IF,yytext);
+else                       return Set_Value(LINE_NUMBER,ELSE,yytext);
+elsif                      return Set_Value(LINE_NUMBER,ELSIF,yytext);
+then                       return Set_Value(LINE_NUMBER,THEN,yytext);
+while                      return Set_Value(LINE_NUMBER,WHILE,yytext);
+do                         return Set_Value(LINE_NUMBER,DO,yytext);
+loop                       return Set_Value(LINE_NUMBER,LOOP,yytext);
+forever                    return Set_Value(LINE_NUMBER,FOREVER,yytext);
+break                      return Set_Value(LINE_NUMBER,BREAK,yytext);
+and                        return Set_Value(LINE_NUMBER,AND,yytext);
+or                         return Set_Value(LINE_NUMBER,OR,yytext);
+not                        return Set_Value(LINE_NUMBER,NOT,yytext);
+return                     return Set_Value(LINE_NUMBER, RETURN,yytext);
 
-true |
-false                      return Set_Value(LINE_NUMBER, BOOLCONST, yytext);
+true                       return Set_Value(LINE_NUMBER, TRUE, yytext);
+false                      return Set_Value(LINE_NUMBER, FALSE, yytext);
 
-\".*\"                      return Set_Value(LINE_NUMBER, STRINGCONST, yytext);//printf("\nSTRING: %s\n", yytext);
+\".*\"                      return Set_Value(LINE_NUMBER, CHARCONST, yytext);//printf("\nSTRING: %s\n", yytext);
 
 \/\/.*[\n]                 ++LINE_NUMBER; //printf("\nCOMMENT %s\n", yytext);
 {DIGIT}+                   return Set_Value(LINE_NUMBER, NUMCONST, yytext);//printf("\nDIGIT: %s\n", yytext);
 {LETTER}+[0-9A-Za-z]*     return Set_Value(LINE_NUMBER, ID, yytext);//printf("\nID: %s\n", yytext);
+
+"?"            return Set_Value(LINE_NUMBER, QMARK, yytext); 
+"*"             return Set_Value(LINE_NUMBER, MULTIPLY, yytext); //if(pdbug)printf("Multiply found: %s\n", yytext);
+"-"            return Set_Value(LINE_NUMBER, MINUS, yytext); 
+"%"            return Set_Value(LINE_NUMBER, PERCENT, yytext);
+"/"            return Set_Value(LINE_NUMBER, DIV, yytext); 
+"+"            return Set_Value(LINE_NUMBER, PLUS, yytext); 
+"<"            return Set_Value(LINE_NUMBER, LESS, yytext);
+">"            return Set_Value(LINE_NUMBER, GRET, yytext);
+"="            return Set_Value(LINE_NUMBER, EQ, yytext);
+";"            return Set_Value(LINE_NUMBER, SEMI, yytext);
+"["            return Set_Value(LINE_NUMBER, LIndex, yytext);
+"]"            return Set_Value(LINE_NUMBER, RIndex, yytext);
+"{"            return Set_Value(LINE_NUMBER, LB, yytext);
+"}"            return Set_Value(LINE_NUMBER, RB, yytext);
+"("            return Set_Value(LINE_NUMBER, LP, yytext);
+")"            return Set_Value(LINE_NUMBER, RP, yytext);
+","            return Set_Value(LINE_NUMBER, COM, yytext);
+":"            return Set_Value(LINE_NUMBER, COL, yytext);
 
 "+="           return Set_Value(LINE_NUMBER, ADDASS, yytext); // printf("ADDASS %s|\n", yytext); 
 "-="           return Set_Value(LINE_NUMBER, SUBASS, yytext); //printf("SUBASS %s|\n", yytext);   
@@ -159,22 +169,24 @@ false                      return Set_Value(LINE_NUMBER, BOOLCONST, yytext);
 "--"           return Set_Value(LINE_NUMBER, DEC, yytext);//printf("DEC %s|\n", yytext);     
 "++"           return Set_Value(LINE_NUMBER, INC, yytext);//printf("INC %s|\n", yytext);  
 "!="           return Set_Value(LINE_NUMBER, NOTEQ, yytext);//printf("NOTEQ %s|\n", yytext);     
-"=="           return Set_Value(LINE_NUMBER, EQ, yytext);//printf("EQ %s|\n", yytext);  
+"=="           return Set_Value(LINE_NUMBER, EQEQ, yytext);//printf("EQ %s|\n", yytext);  
 "<="           return Set_Value(LINE_NUMBER, LESSEQ, yytext); //printf("LESSEQ %s|\n", yytext);     
 ">="           return Set_Value(LINE_NUMBER, GRETEQ, yytext);//printf("GRETEQ %s|\n", yytext); 
 
-{SINGLE_CHAR}  return Set_Value(LINE_NUMBER, OP, yytext);//printf("SINGLE CHAR %s\n", yytext);
-
-\'.\'          return Set_Value(LINE_NUMBER, CHARCONST, yytext);
+              
+\n	         ++LINE_NUMBER;  
+\'.\'           return Set_Value(LINE_NUMBER, CHARCONST, yytext);
 \.\.           return Set_Value(LINE_NUMBER, RANGE, yytext);
 
-\'.{2,}[^\n]\' return Set_Value(LINE_NUMBER, CHAR_ERR ,yytext); 
-[\'][\\].[\']  return Set_Value(LINE_NUMBER, CHARCONST_ESC, yytext);      // printf("_______________________CHAR CONST WAS FOUND IT WAS %s|\n", yytext);
+
+[\']\\0[']    return Set_Value(LINE_NUMBER, CHARCONST, "' \0 ");
+[\']\\n[']    return Set_Value(LINE_NUMBER, CHARCONST, "'\n'");
+[\'][\\].[\']   return Set_Value(LINE_NUMBER, CHARCONST, &yytext[2]);       //printf("_______________________CHAR CONST WAS FOUND IT WAS %s|\n", yytext);
 
 " "  ; //White space
 \t  ; //Tabs
-\n	         ++LINE_NUMBER;          //printf("Line: %d\n", LINE_NUMBER);
-.           return Set_Value(LINE_NUMBER, INVALID, yytext);   //printf("ERR NOT MATCHED %s\n", yytext);//                      // printf("NOT FOUND: %s\n", yytext);
+        
+.              LINE_NUMBER++; //printf(" ERR NOT MATCHED |%s|\n", yytext);// return Set_Value(LINE_NUMBER, INVALID, yytext);   ////                      // printf("NOT FOUND: %s\n", yytext);
               
 %%
 //	
