@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
-//#include "ScanType.h"
-#include "tree.h"
+#include "semantic.h"
+#include "printtree.h"
 #define YYERROR_VERBOSE
 int yylex();
 extern int yylineno;
@@ -16,6 +16,11 @@ extern FILE *yyin;
 static char *savedName;
 static int savedLinenno;
 static TreeNode *syntaxTree;
+extern bool bug;
+bool cdbug, PAST, STATIC_FLAG;
+int numErrs, numWarns;  
+SymbolTable st;
+
 void yyerror(const char *msg)
 {
       printf("ERROR(PARSER): %s\n LINE %d\nToken ", msg, yylineno );
@@ -35,8 +40,9 @@ void yyerror(const char *msg)
 %token <Token_Data> QMARK  MULTIPLY MINUS PERCENT DIV PLUS LESS GRET EQ SEMI LIndex RIndex LB RB LP RP COM COL EQEQ
 %token <Token_Data>  IF ELSE ELSIF THEN WHILE DO LOOP FOREVER BREAK AND OR NOT RETURN TRUE FALSE
 %token <Token_Data> ADDASS SUBASS MULASS DIVASS DEC INC NOTEQ LESSEQ GRETEQ ID INT BOOL CHAR STATIC  
+%token <Token_Data> unary_MUL unary_MIN
 
-%type <type> typeSpecifier   scopedTypeSpecifier  //for type checking
+%type <Tree> typeSpecifier   scopedTypeSpecifier  //for type checking
 //Non terminals
 %type <Tree> declarationList declaration varDeclaration scopedVarDeclaration
 %type <Tree> varDeclList varDeclInitialize funDeclaration varDeclId
@@ -93,7 +99,7 @@ varDeclaration : typeSpecifier varDeclList SEMI
                      {
                         if(cdbug) printf("<-varDeclaration typeSpecifier varDeclList SEMI\n");
                         $$ = $2;
-                        typeToSibs($$, $1);
+                        typeToSibs($$, $1->type);
                      }
 ;
 /*5*/
@@ -101,7 +107,12 @@ scopedVarDeclaration : scopedTypeSpecifier varDeclList SEMI
                      {
                         if(cdbug) printf("<-scopedVarDeclaration scopedTypeSpecifier varDeclList\n");
                         $$ = $2;
-                        typeToSibs($$, $1);
+                        $$->type = $1->type;
+                        if(STATIC_FLAG) {
+                           $$->isStatic = true;
+                           STATIC_FLAG = false;
+                        }
+                        typeToSibs($$, $1->type);
                      }
 ;
 /*6*/
@@ -141,13 +152,14 @@ varDeclId : ID
 
           | ID LIndex NUMCONST RIndex          
           {
-               if(cdbug) printf("<-varDeclId ID LIndex         NUMCONST RIndex \n");
+               if(cdbug) printf("<-varDeclId ID LIndex NUMCONST RIndex \n");  //array define
                $$ = newDecNode(VarK, $1->Line_Num);
                $$->attr.name = strdup($1->Token_Str); 
                $$->TD = $1;
                $$->attr.value = $3->Num_Val;    //posibly not needed
                $$->isArray = true;
                $$->attr.op = $2->Token_Class;
+               $$->type = UndefinedType;
           }
 
  
@@ -157,6 +169,7 @@ scopedTypeSpecifier : STATIC typeSpecifier
                      {
                         if(cdbug) printf("<-scopedTypeSpecifier STATIC typeSpecifier \n");
                         $$ = $2;
+                        STATIC_FLAG = true;
                      }
 
                     | typeSpecifier             
@@ -169,18 +182,18 @@ scopedTypeSpecifier : STATIC typeSpecifier
 typeSpecifier : INT     
                {
                   if(cdbug) printf("<-typeSpecifier INT \n");
-                  $$ = Integer;             
+                  $$->type =  Integer;             
                }
 
               | BOOL    
                {
                   if(cdbug) printf("<-typeSpecifier BOOL\n");
-                  $$ = Bool;
+                  $$->type = Bool;
                }
               | CHAR    
                {
                   if(cdbug) printf("<-typeSpecifier CHAR\n");
-                  $$ = Char;
+                  $$->type = Char;
                }
 ; 
 /*11*/
@@ -190,7 +203,7 @@ funDeclaration : typeSpecifier ID LP params RP statement
                   if(cdbug) printf("<-funDeclaration typeSpecifier ID LP params RP statement  \n");
                   $$ = newDecNode(FuncK, $2->Line_Num); 
                   $$->attr.name = strdup($2->Token_Str);  
-                  $$->type = $1;
+                  $$->type = $1->type;
                   $$->child[0] = $4;
                   $$->child[1] = $6;
                }
@@ -200,6 +213,8 @@ funDeclaration : typeSpecifier ID LP params RP statement
                   if(cdbug) printf("<-funDeclaration ID LP params RP statement  \n");
                   $$ = newDecNode(FuncK, $1->Line_Num); 
                   $$->attr.name = strdup($1->Token_Str);
+                  $$->type = Void;
+                  $$->TD = $1;
                   $$->child[0] = $3;
                   $$->child[1] = $5;
                }
@@ -235,7 +250,7 @@ paramTypeList : typeSpecifier paramIdList
                {
                   if(cdbug) printf("<-paramTypeList typeSpecifier paramIdList\n");
                   $$ = $2;
-                  typeToSibs($$, $1);      
+                  typeToSibs($$, $1->type);      
                }
 ;
 /*15*/
@@ -257,6 +272,7 @@ paramId : ID
             if(cdbug) printf("<-paramId ID\n");
             $$ = newDecNode(ParamK, $1->Line_Num); 
             $$->attr.name = strdup($1->Token_Str); 
+            $$->isInit = true;
          }
 
         | ID LIndex RIndex     
@@ -265,6 +281,8 @@ paramId : ID
             $$ = newDecNode(ParamK, $1->Line_Num);
             $$->attr.name = strdup($1->Token_Str);  
             $$->isArray = true;
+            $$->isInit = true;
+            $$->type = UndefinedType;
          }
 ;
 /*17*/
@@ -496,8 +514,10 @@ matchedWhile : WHILE simpleExpression DO matched
                   if(cdbug) printf("<-unmatchedWhile LOOP iterationRange DO unmatched\n");
                   $$ = newStmtNode(LoopK, $1->Line_Num);
                   $$->attr.op = $1->Token_Class;  $$->type = Void;
-                  $$->child[0] = newExpNode(IdK, $2->Line_Num);
+                  $$->child[0] = newDecNode(VarK, $2->Line_Num);
+                  $$->child[0]->type = Integer;
                   $$->child[0]-> attr.name = strdup($2->Token_Str);
+                  $$->child[0]->isInit = true;
                   $$->child[1] = $3;
                   $$->child[2] = $5; 
                }
@@ -523,8 +543,10 @@ unmatchedWhile : WHILE simpleExpression DO unmatched
                   if(cdbug) printf("<-unmatchedWhile LOOP iterationRange DO unmatched\n");
                   $$ = newStmtNode(LoopK, $1->Line_Num);
                   $$->attr.op = $1->Token_Class;  
-                  $$->child[0] = newExpNode(IdK, $2->Line_Num);
+                  $$->child[0] = newDecNode(VarK, $2->Line_Num);
+                  $$->child[0]->type = Integer;
                   $$->child[0]->attr.name = strdup($2->Token_Str);
+                  $$->child[0]->isInit = true;
                   $$->child[1] = $3;
                   $$->child[2] = $5;   
                }
@@ -554,8 +576,10 @@ iterationStmt : WHILE simpleExpression DO statement
                   if(cdbug) printf("<-iterationStmt declaration\n");
                   $$ = newStmtNode(LoopK, $1->Line_Num);
                   $$->attr.op = $1->Token_Class;  $$->type = Void;
-                  $$->child[0] = newExpNode(IdK, $2->Line_Num);
+                  $$->child[0] = newDecNode(VarK, $2->Line_Num);
                   $$->child[0]->attr.name = strdup($2->Token_Str);
+                  $$->child[0]->type = Integer;
+                  $$->child[0]->isInit = true;
                   $$->child[1] = $3;
                   $$->child[2] = $5;
                }
@@ -592,6 +616,7 @@ expression : mutable EQ expression
             {
                if(cdbug) printf("<-expression mutable EQ          expression\n");
                $$ = newExpNode(AssignK, $2->Line_Num); 
+               $$->type = UndefinedType;
                $$->attr.op = $2->Token_Class; 
                $$->child[0]= $1;
                $$->child[1] = $3; 
@@ -870,14 +895,16 @@ unaryop : MINUS
             $$ = newExpNode(OpK, $1->Line_Num); 
             $$->attr.op = $1->Token_Class;  
             $$->type = Integer; 
+            $$->unary = true;
          }
 
         | MULTIPLY 
         {
            if(cdbug) printf("<-unaryop declaration\n");
            $$ = newExpNode(OpK, $1->Line_Num); 
-           $$->attr.op = $1->Token_Class;  
+           $$->attr.op = $1->Token_Class; 
            $$->type = Integer; 
+           $$->unary = true;
          }
 
         | QMARK 
@@ -886,6 +913,7 @@ unaryop : MINUS
            $$ = newExpNode(OpK, $1->Line_Num); 
            $$->attr.op = $1->Token_Class;  
            $$->type = Integer;
+           //$$->unary = true;
          }
 ;
 /*40*/
@@ -907,18 +935,18 @@ mutable : ID
             if(cdbug) printf("<-mutable ID %s\n", $1->Token_Str);
             $$ = newExpNode(IdK, $1->Line_Num); 
             $$->attr.name = strdup($1->Token_Str); 
+            $$->type = UndefinedType;
          }
 
         | mutable LIndex expression RIndex 
          {
             if(cdbug) printf("<-mutable mutable LIndex expression RIndex\n");
             $$ = newExpNode(OpK, $2->Line_Num);
-            //$$ = $3;
             $$->attr.op = $2->Token_Class;
-            //$$->kind.expr = OpK;
-            //$$->child[0] = $1;
             $$->child[0] = $1;
+            $$->child[0]->isArray = true;
             $$->child[1] = $3;
+            $$->type = UndefinedType;
          }
 ;
 /*42*/
@@ -982,6 +1010,7 @@ constant : NUMCONST
             $$ = newExpNode(ConstantK, $1->Line_Num); 
             $$-> attr.value = $1->Num_Val;
             $$->type = Integer;
+            $$->isInit = true;
          }
 
          | CHARCONST    
@@ -991,7 +1020,8 @@ constant : NUMCONST
             $$->TD=$1;
             //printf("FOUND |%s|\n", $1->Token_Str);
             $$->attr.op = $1->Token_Class;
-            $$->type = CharInt;
+            $$->type = Char;
+            $$->isInit = true;
          }
 
          | STRINGCONST  
@@ -1009,6 +1039,7 @@ constant : NUMCONST
             $$->attr.value = 0;
             $$->type = Bool;
             $$->attr.op = $1->Token_Class; 
+            $$->isInit = true;
          }
 
          | TRUE         
@@ -1018,6 +1049,7 @@ constant : NUMCONST
             $$->attr.value = 1;
             $$->type = Bool; 
             $$->attr.op = $1->Token_Class; 
+            $$->isInit = true;
          }
 ;
 
@@ -1027,23 +1059,45 @@ constant : NUMCONST
 
 int main(int argc, char **argv){
    int c = 0;
-   bool printSyntaxTree;
- 
+   numErrs = 0, numWarns = 0;   
+   bool printSyntaxTree = 0;
+   
+   void *tmp;
+
+   
+
+   // s.insert("dog", (char *)"WOOF");
+   // printf("%s\n", (char *)(s.lookup("dog")));
+   // 
+   // //st.print(pointerPrintStr);
+   // st.insert("charlie", (char *)"cow");
+   //  st.enter((std::string )"Second");
+   //  st.insert("delta", (char *)"dog");
+   //  st.insertGlobal("echo", (char *)"elk");
+   //  st.print(pointerPrintStr);
+
       // hunt for a string of options
-      while ((c = getopt(argc, argv, "cdp")) != -1) {
+      while ((c = getopt(argc, argv, "bcdpP")) != -1) {
             switch (c) {
+            case 'b':
+               bug = true;
+               break;
             case 'c':
                cdbug = true;
                break;
             case 'd': 
                yydebug=1;
               if(cdbug) printf("DEBUGGING\n");
-              cdbug = true;
                break;
             case 'p': 
+               if(cdbug)printf("PRINTING SYNTAX TREE\n");
                printSyntaxTree=true;
-               if(cdbug) printf("PRINTING\n");
                break;
+            case 'P':
+            if(cdbug) printf("PRINTING THE ANNOTATED SYNTAX TREE\n");
+            printSyntaxTree = true;
+            PAST = true;
+            break;
             case '?':
             default: 
                exit(1);
@@ -1062,7 +1116,22 @@ int main(int argc, char **argv){
       }
    }
    
-   yyparse();
+   yyparse();     //tokenize the entire file
+   
+   analyze(syntaxTree);   //syntax anlysis 
+   tmp = st.lookup((char *)"main");
+   
+   if (tmp==NULL){
+      printf("ERROR(LINKER): Procedure main is not declared.\n");
+      numErrs++;
+   } 
+   
+   //printf("Print FINAL table.\n");
+               
+   //st.print(pointerPrintStr);
+   if(printSyntaxTree) TreePrint(syntaxTree, 0);   //print the tree
 
-   if(printSyntaxTree) TreePrint(syntaxTree, 0);   
+   printf("Number of warnings: %d\n",numWarns );
+   printf("Number of errors: %d\n",numErrs);
+
 }

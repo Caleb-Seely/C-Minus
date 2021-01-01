@@ -1,3 +1,5 @@
+#ifndef SCAN_TYPE
+#define SCAN_TYPE
 typedef struct{
 
    int Token_Class;
@@ -7,3 +9,4 @@ typedef struct{
    char *Raw_Str;
    bool n;
 }TokenData;
+#endif
